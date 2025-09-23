@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tienda en Línea - Productos</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>🛍️ Tienda en Línea</h1>
+    <div id="producto"></div>
+  </div>
+  
+  <script>
+    function mostrarProducto(jsonStr) {
+      const data = JSON.parse(jsonStr);
+      document.getElementById('producto').innerHTML = `
+        <p><b>📦 Nombre:</b> <span>${data.nombre}</span></p>
+        <p><b>🏷️ Marca:</b> <span>${data.marca}</span></p>
+        <p><b>📝 Descripción:</b> <span>${data.descripcion}</span></p>
+        <p><b>💰 Precio:</b> <span>$${data.precio}</span></p>
+        <p><b>📊 Cantidad:</b> <span>${data.cantidad} unidades</span></p>
+      `;
+    }
+  </script>
+</body>
+</html>
