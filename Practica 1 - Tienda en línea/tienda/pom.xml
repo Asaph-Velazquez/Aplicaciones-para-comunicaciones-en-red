@@ -17,8 +17,7 @@
       <artifactId>javafx-web</artifactId>
       <version>20</version>
     </dependency>
-
-    <!-- JSON Simple (si lo necesitas para parsear) -->
+    <!-- JSON Simple -->
     <dependency>
       <groupId>com.googlecode.json-simple</groupId>
       <artifactId>json-simple</artifactId>
