@@ -8,6 +8,7 @@ Cada usuario contará con un menú (línea de comandos o GUI) desde donde podrá
 - Editar contenido del carrito de compra
 - Finalizar compra y obtener ticket
 <br>
-***Validar existencias antes de agregar los artículos al carrito y decrementar existencias*** 
+
+***Validar existencias antes de agregar los artículos al carrito y decrementar existencias***
 
 ## 
