@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Carrito de Compras - Tienda en Línea</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Estilos específicos para el carrito */
+    .carrito-container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+    
+    .carrito-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e0e0e0;
+    }
+    
+    .carrito-titulo {
+      font-size: 2.2em;
+      color: #333;
+      margin: 0;
+    }
+    
+    .carrito-contador {
+      background: linear-gradient(45deg, #667eea, #764ba2);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 25px;
+      font-weight: bold;
+      font-size: 1.1em;
+    }
+    
+    .carrito-items {
+      margin-bottom: 30px;
+    }
+    
+    .carrito-item {
+      background: #fff;
+      border-radius: 15px;
+      padding: 25px;
+      margin-bottom: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e0e0e0;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .carrito-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+    
+    .item-info {
+      flex: 1;
+    }
+    
+    .item-nombre {
+      font-size: 1.3em;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .item-marca {
+      color: #667eea;
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+    
+    .item-descripcion {
+      color: #666;
+      font-size: 0.95em;
+      margin-bottom: 10px;
+    }
+    
+    .item-precio {
+      font-size: 1.4em;
+      font-weight: bold;
+      color: #e53e3e;
+      min-width: 120px;
+      text-align: right;
+    }
+    
+    .carrito-total {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 25px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+    }
+    
+    .total-label {
+      font-size: 1.2em;
+      margin-bottom: 10px;
+      opacity: 0.9;
+    }
+    
+    .total-amount {
+      font-size: 2.5em;
+      font-weight: bold;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    
+    .carrito-vacio {
+      text-align: center;
+      padding: 60px 20px;
+      color: #999;
+      font-size: 1.2em;
+    }
+    
+    .carrito-vacio .emoji {
+      font-size: 4em;
+      margin-bottom: 20px;
+      display: block;
+    }
+    
+    .acciones {
+      margin-top: 30px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+    
+    .btn {
+      padding: 12px 25px;
+      border: none;
+      border-radius: 25px;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(45deg, #48bb78, #38a169);
+      color: white;
+    }
+    
+    .btn-secondary {
+      background: linear-gradient(45deg, #ed8936, #dd6b20);
+      color: white;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="carrito-container">
+      <div class="carrito-header">
+        <h1 class="carrito-titulo">🛒 Carrito de Compras</h1>
+        <div class="carrito-contador" id="contador">0 artículos</div>
+      </div>
+      
+      <div class="carrito-items" id="carrito-items">
+        <!-- Los items del carrito se insertarán aquí -->
+      </div>
+      
+      <div class="carrito-total" id="carrito-total" style="display: none;">
+        <div class="total-label">Total a pagar:</div>
+        <div class="total-amount" id="total-amount">$0.00</div>
+      </div>
+      
+      <div class="carrito-vacio" id="carrito-vacio">
+        <span class="emoji">🛒</span>
+        <div>Tu carrito está vacío</div>
+        <div style="margin-top: 10px; font-size: 0.9em; color: #bbb;">
+          Agrega algunos productos para comenzar
+        </div>
+      </div>
+      
+      <div class="acciones" id="acciones" style="display: none;">
+        <button class="btn btn-primary" onclick="procederCompra()">
+          💳 Proceder al Pago
+        </button>
+        <button class="btn btn-secondary" onclick="vaciarCarrito()">
+          🗑️ Vaciar Carrito
+        </button>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    let carritoData = [];
+    
+    // Nueva función que Java llama con array completo y total
+    function mostrarCarritoCompleto(carritoArrayJson, totalCarrito) {
+      try {
+        // Parsear el array JSON que viene de Java
+        carritoData = JSON.parse(carritoArrayJson);
+        console.log("Carrito recibido:", carritoData);
+        console.log("Total:", totalCarrito);
+        
+        renderizarCarrito();
+      } catch (error) {
+        console.error("Error al parsear carrito:", error);
+        mostrarError("Error al cargar el carrito");
+      }
+    }
+    
+    // Función para mostrar errores
+    function mostrarError(mensaje) {
+      const itemsContainer = document.getElementById('carrito-items');
+      itemsContainer.innerHTML = `
+        <div class="error-message" style="text-align: center; padding: 40px; color: #e53e3e; background: #fed7d7; border-radius: 8px; margin: 20px 0;">
+          <h3>⚠️ Error</h3>
+          <p>${mensaje}</p>
+        </div>
+      `;
+    }
+    
+    // Función legacy para compatibilidad
+    function mostrarCarrito(carritoString) {
+      console.log("Datos del carrito recibidos (string):", carritoString);
+      parseCarritoData(carritoString);
+      renderizarCarrito();
+    }
+    
+    function parseCarritoData(carritoString) {
+      // Simulamos algunos datos para demostración si no viene JSON válido
+      try {
+        carritoData = JSON.parse(carritoString);
+      } catch (error) {
+        console.log("Usando datos de demostración");
+        carritoData = [
+          {
+            nombre: "Laptop",
+            marca: "Dell", 
+            descripcion: "Laptop para uso personal",
+            precio: 1500.00,
+            categoria: "Electrónica",
+            cantidad: 1
+          },
+          {
+            nombre: "Aspiradora", 
+            marca: "Dyson",
+            descripcion: "Aspiradora potente",
+            precio: 300.00,
+            categoria: "Hogar",
+            cantidad: 1
+          }
+        ];
+      }
+    }
+    
+    function renderizarCarrito() {
+      const itemsContainer = document.getElementById('carrito-items');
+      const contadorElement = document.getElementById('contador');
+      const totalElement = document.getElementById('carrito-total');
+      const vacioElement = document.getElementById('carrito-vacio');
+      const accionesElement = document.getElementById('acciones');
+      const totalAmountElement = document.getElementById('total-amount');
+      
+      // Limpiar contenido
+      itemsContainer.innerHTML = '';
+      
+      if (!carritoData || carritoData.length === 0) {
+        // Mostrar carrito vacío
+        vacioElement.style.display = 'block';
+        totalElement.style.display = 'none';
+        accionesElement.style.display = 'none';
+        contadorElement.textContent = '0 artículos';
+      } else {
+        // Mostrar items
+        vacioElement.style.display = 'none';
+        totalElement.style.display = 'block';
+        accionesElement.style.display = 'flex';
+        
+        let total = 0;
+        
+        carritoData.forEach((item, index) => {
+          const itemElement = document.createElement('div');
+          itemElement.className = 'carrito-item';
+          itemElement.innerHTML = `
+            <div class="item-info">
+              <div class="item-nombre">${item.nombre}</div>
+              <div class="item-marca">🏷️ ${item.marca}</div>
+              <div class="item-categoria">📂 ${item.categoria}</div>
+              <div class="item-descripcion">${item.descripcion}</div>
+            </div>
+            <div class="item-precio">$${Number(item.precio).toFixed(2)}</div>
+          `;
+          itemsContainer.appendChild(itemElement);
+          total += Number(item.precio);
+        });
+        
+        // Actualizar contador y total
+        contadorElement.textContent = `${carritoData.length} artículo${carritoData.length !== 1 ? 's' : ''}`;
+        totalAmountElement.textContent = `$${total.toFixed(2)}`;
+      }
+    }
+    
+    function procederCompra() {
+      if (carritoData && carritoData.length > 0) {
+        let mensaje = '🎉 ¡Compra realizada con éxito!\\n\\n';
+        mensaje += `Total de artículos: ${carritoData.length}\\n`;
+        mensaje += `Total a pagar: $${document.getElementById('total-amount').textContent.replace('$', '')}\\n\\n`;
+        mensaje += 'Gracias por tu compra en nuestra tienda en línea.';
+        alert(mensaje);
+      } else {
+        alert('❌ No hay artículos en el carrito para comprar');
+      }
+    }
+    
+    function vaciarCarrito() {
+      if (confirm('¿Estás seguro de que quieres vaciar el carrito?')) {
+        carritoData = [];
+        renderizarCarrito();
+      }
+    }
+    
+    // Inicializar con carrito vacío
+    renderizarCarrito();
+  </script>
+</body>
+</html>

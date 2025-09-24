@@ -8,10 +8,30 @@ import netscape.javascript.JSObject;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.ArrayList;
+
 import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 
 public class Cliente extends Application {
+
+    public static List<JSONObject> obtenerProductos() throws Exception{
+        List<JSONObject> productos = new ArrayList<>();
+
+        Socket cliente = new Socket("localhost", 1234);
+        BufferedReader buffer = new BufferedReader(new InputStreamReader(cliente.getInputStream(), StandardCharsets.UTF_8));
+
+        JSONParser parser = new JSONParser();
+        String mensaje;
+        while ((mensaje = buffer.readLine()) != null) {
+            JSONObject json = (JSONObject) parser.parse(mensaje);
+            productos.add(json);
+        }
+        buffer.close();
+        cliente.close();
+        return productos;
+    }
 
     @Override
     public void start(Stage stage) {
@@ -23,20 +43,12 @@ public class Cliente extends Application {
         engine.getLoadWorker().stateProperty().addListener((obs, o, n) -> {
             if (n == javafx.concurrent.Worker.State.SUCCEEDED) {
                 try {
-                    Socket cliente = new Socket("localhost", 1234);
-                    BufferedReader buffer = new BufferedReader(
-                        new InputStreamReader(cliente.getInputStream(), StandardCharsets.UTF_8)
-                    );
-                    String mensaje = buffer.readLine();
-                    JSONParser parser = new JSONParser();
-                    JSONObject json = (JSONObject) parser.parse(mensaje);
-
-                    // Pasar JSON a la página
                     JSObject window = (JSObject) engine.executeScript("window");
-                    window.call("mostrarProducto", json.toJSONString());
-
-                    buffer.close();
-                    cliente.close();
+                    window.call("limpiarProductos");
+                    
+                    for (JSONObject producto : obtenerProductos()) {
+                        window.call("agregarProducto", producto.toJSONString());
+                    }
                 } catch (Exception e) { e.printStackTrace(); }
             }
         });

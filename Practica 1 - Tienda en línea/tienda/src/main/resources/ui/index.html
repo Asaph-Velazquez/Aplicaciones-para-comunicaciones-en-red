@@ -3,26 +3,182 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tienda en Línea - Productos</title>
+  <title>Tienda en Línea - Catálogo de Productos</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h1>🛍️ Tienda en Línea</h1>
-    <div id="producto"></div>
-  </div>
+  <!-- Header principal -->
+  <header class="header">
+    <div class="header-content">
+      <h1>🛍️ Tienda en Línea</h1>
+      <div class="header-stats">
+        <div class="stat-item">
+          <span class="stat-number" id="total-productos">0</span>
+          <span class="stat-label">Productos</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-number">En línea</span>
+          <span class="stat-label">Estado</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenido principal -->
+  <main class="main-content">
+    <div class="content-header">
+      <h2 class="page-title">📦 Catálogo de Productos</h2>
+      <div class="toolbar">
+        <input type="text" class="search-box" placeholder="🔍 Buscar productos..." id="buscar">
+        <button class="btn btn-primary" onclick="filtrarProductos()">Filtrar</button>
+        <button class="btn btn-primary" onclick="recargarProductos()">🔄 Actualizar</button>
+      </div>
+    </div>
+    
+    <div id="producto">
+      <!-- Estado inicial: cargando -->
+      <div class="empty-state">
+        <span class="emoji">⏳</span>
+        <h3>Cargando productos...</h3>
+        <p>Conectando con el servidor</p>
+      </div>
+    </div>
+  </main>
   
   <script>
-    function mostrarProducto(jsonStr) {
+    let todosLosProductos = [];
+    
+    // Función para limpiar todos los productos
+    function limpiarProductos() {
+      document.getElementById('producto').innerHTML = '';
+      actualizarContadorProductos(0);
+    }
+    
+    // Función para agregar un producto (mantiene los anteriores)
+    function agregarProducto(jsonStr) {
       const data = JSON.parse(jsonStr);
+      todosLosProductos.push(data);
+      
+      const productoDiv = document.createElement('div');
+      productoDiv.className = 'producto-item';
+      productoDiv.innerHTML = `
+        <div class="producto-header">
+          <h3 class="producto-nombre">${data.nombre}</h3>
+          <span class="producto-categoria">${data.categoria}</span>
+        </div>
+        
+        <div class="producto-details">
+          <div class="detail-item">
+            <span class="detail-label">🏷️ Marca</span>
+            <span class="detail-value">${data.marca}</span>
+          </div>
+          <div class="detail-item">
+            <span class="detail-label">📊 Stock</span>
+            <span class="detail-value">${data.cantidad} unidades</span>
+          </div>
+        </div>
+        
+        <div class="producto-descripcion">
+          <div class="detail-label">📝 Descripción</div>
+          <div style="margin-top: 8px; color: #555; line-height: 1.5;">
+            ${data.descripcion}
+          </div>
+        </div>
+        
+        <div class="producto-footer">
+          <div class="precio-section">
+            <div class="precio-label">Precio</div>
+            <div class="precio-valor">$${data.precio}</div>
+            <button class="btn btn-cart" onclick="agregarAlCarrito('${encodeURIComponent(JSON.stringify(data))}')">🛒 Añadir al Carrito</button>
+          </div>
+          <div class="stock-section">
+            <div class="stock-label">Disponibilidad</div>
+            <div class="stock-valor">${data.cantidad > 0 ? 'En stock' : 'Agotado'}</div>
+          </div>
+        </div>
+      `;
+      
+      document.getElementById('producto').appendChild(productoDiv);
+      actualizarContadorProductos(todosLosProductos.length);
+    }
+    
+    // Función legacy para compatibilidad (muestra solo un producto)
+    function mostrarProducto(jsonStr) {
+      limpiarProductos();
+      agregarProducto(jsonStr);
+    }
+    
+    function actualizarContadorProductos(cantidad) {
+      document.getElementById('total-productos').textContent = cantidad;
+    }
+    
+    function filtrarProductos() {
+      const filtro = document.getElementById('buscar').value.toLowerCase();
+      const productos = document.querySelectorAll('.producto-item');
+      
+      productos.forEach(producto => {
+        const texto = producto.textContent.toLowerCase();
+        if (texto.includes(filtro)) {
+          producto.style.display = 'block';
+        } else {
+          producto.style.display = 'none';
+        }
+      });
+    }
+    
+    function recargarProductos() {
+      location.reload();
+    }
+    
+    function mostrarEstadoVacio() {
       document.getElementById('producto').innerHTML = `
-        <p><b>📦 Nombre:</b> <span>${data.nombre}</span></p>
-        <p><b>🏷️ Marca:</b> <span>${data.marca}</span></p>
-        <p><b>📝 Descripción:</b> <span>${data.descripcion}</span></p>
-        <p><b>💰 Precio:</b> <span>$${data.precio}</span></p>
-        <p><b>📊 Cantidad:</b> <span>${data.cantidad} unidades</span></p>
+        <div class="empty-state">
+          <span class="emoji">📦</span>
+          <h3>No hay productos disponibles</h3>
+          <p>El catálogo está vacío o no se pudo conectar al servidor</p>
+        </div>
       `;
     }
+    
+    // Función para agregar producto al carrito
+    function agregarAlCarrito(productoJson) {
+      try {
+        const producto = JSON.parse(decodeURIComponent(productoJson));
+        
+        // Guardar en localStorage para que CarritoGUI lo pueda usar
+        let carrito = JSON.parse(localStorage.getItem('carritoTemporal') || '[]');
+        carrito.push(producto);
+        localStorage.setItem('carritoTemporal', JSON.stringify(carrito));
+        
+        // Mostrar confirmación
+        alert(`✅ "${producto.nombre}" agregado al carrito\n\nTotal de artículos: ${carrito.length}`);
+        
+        // Opción 1: Abrir carrito en nueva ventana
+        window.open('carrito.html', '_blank');
+        
+        // Opción 2: Navegar al carrito
+        //window.location.href = 'carrito.html';
+        
+        // Opción 3: Pregunta qué quiere hacer
+        if (confirm('¿Quieres ver el carrito ahora?')) {
+          window.open('carrito.html', '_blank');
+        }
+        
+      } catch (error) {
+        console.error('Error al agregar al carrito:', error);
+        alert('❌ Error al agregar el producto al carrito');
+      }
+    }
+    
+    // Configurar búsqueda en tiempo real
+    document.getElementById('buscar').addEventListener('input', filtrarProductos);
+    
+    // Timeout para mostrar estado vacío si no llegan productos
+    setTimeout(() => {
+      if (todosLosProductos.length === 0) {
+        mostrarEstadoVacio();
+      }
+    }, 5000);
   </script>
 </body>
 </html>

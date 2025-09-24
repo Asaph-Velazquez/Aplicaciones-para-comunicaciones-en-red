@@ -2,6 +2,7 @@ package tienda;
 import org.json.simple.*;
 public class Articulo{
     //Atributos
+    public String categoria;
     public String nombre;
     public String marca;
     public String descripcion;
@@ -9,7 +10,8 @@ public class Articulo{
     public int cantidad;
 
     //constructor
-    public Articulo(String nombre, String marca, String descripcion, double precio, int cantidad){
+    public Articulo(String categoria, String nombre, String marca, String descripcion, double precio, int cantidad){
+        this.categoria = categoria;
         this.nombre = nombre;
         this.marca = marca;
         this.descripcion = descripcion;
@@ -34,6 +36,7 @@ public class Articulo{
         obj.put("descripcion", this.descripcion);
         obj.put("precio", this.precio);
         obj.put("cantidad", this.cantidad);
+        obj.put("categoria", this.categoria);
         return obj;
     }
 }
