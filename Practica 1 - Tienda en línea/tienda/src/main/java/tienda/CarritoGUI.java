@@ -59,9 +59,8 @@ public class CarritoGUI extends Application {
         stage.show();
     }
     
-    /**
-     * Convierte un JSONObject a un objeto Articulo
-     */
+
+    //Convierte un JSONObject a un objeto Articulo
     private Articulo jsonToArticulo(JSONObject json) {
         String categoria = (String) json.get("categoria");
         String nombre = (String) json.get("nombre");
