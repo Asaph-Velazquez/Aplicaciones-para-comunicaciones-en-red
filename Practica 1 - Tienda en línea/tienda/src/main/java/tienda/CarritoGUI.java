@@ -37,13 +37,7 @@ public class CarritoGUI extends Application {
                     }
 
                     // Crear un arreglo JSON para enviar al JavaScript
-                    JSONArray arrayCarrito = new JSONArray();
-                    for (Articulo art : carrito.getArticulos()) {
-                        arrayCarrito.add(art.toJSON());
-                    }
-
-                    // Pasar datos del carrito a la página HTML
-                    window.call("mostrarCarritoCompleto", arrayCarrito.toJSONString(), carrito.getTotal());
+                    actualizarCarrito(window);
 
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -80,6 +74,16 @@ public class CarritoGUI extends Application {
     
     public Carrito getCarrito() {
         return carrito;
+    }
+    
+    // Método para actualizar el carrito en la interfaz
+    @SuppressWarnings("unchecked")
+    private void actualizarCarrito(JSObject window) {
+        JSONArray arrayCarrito = new JSONArray();
+        for (Articulo art : carrito.getArticulos()) {
+            arrayCarrito.add(art.toJSON());
+        }
+        window.call("mostrarCarritoCompleto", arrayCarrito.toJSONString(), carrito.getTotal());
     }
     
     public static void main(String[] args) {

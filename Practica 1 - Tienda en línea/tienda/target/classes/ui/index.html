@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tienda en Línea - Catálogo de Productos</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
   <!-- Header principal -->
@@ -34,7 +34,10 @@
         <button class="btn btn-primary" onclick="recargarProductos()">🔄 Actualizar</button>
       </div>
     </div>
-    
+    <div>
+      <a href="carrito.html"><button class="btn btn-primary">Ir al Carrito</button></a>
+      <br>
+    </div>
     <div id="producto">
       <!-- Estado inicial: cargando -->
       <div class="empty-state">
@@ -145,6 +148,9 @@
       try {
         const producto = JSON.parse(decodeURIComponent(productoJson));
         
+        // Agregar ID único al producto
+        producto.id = Date.now() + Math.random();
+        
         // Guardar en localStorage para que CarritoGUI lo pueda usar
         let carrito = JSON.parse(localStorage.getItem('carritoTemporal') || '[]');
         carrito.push(producto);
@@ -156,8 +162,6 @@
         // Opción 1: Abrir carrito en nueva ventana
         window.open('carrito.html', '_blank');
         
-        // Opción 2: Navegar al carrito
-        //window.location.href = 'carrito.html';
         
         // Opción 3: Pregunta qué quiere hacer
         if (confirm('¿Quieres ver el carrito ahora?')) {

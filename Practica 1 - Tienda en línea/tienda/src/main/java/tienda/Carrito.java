@@ -1,8 +1,5 @@
 package tienda;
 import java.util.List;
-
-import org.json.simple.JSONObject;
-
 import java.util.ArrayList;
 
 public class Carrito {
@@ -12,17 +9,6 @@ public class Carrito {
     public Carrito() {
         this.articulos = new ArrayList<>();
         this.total = 0.0;
-    }
-    
-    private Articulo jsonToArticulo(JSONObject json) {
-        String categoria  = (String) json.get("categoria");
-        String nombre     = (String) json.get("nombre");
-        String marca      = (String) json.get("marca");
-        String descripcion= (String) json.get("descripcion");
-        double precio     = ((Number) json.get("precio")).doubleValue();
-        int cantidad      = ((Number) json.get("cantidad")).intValue();
-
-        return new Articulo(categoria, nombre, marca, descripcion, precio, cantidad);
     }
 
     public void agregarArticulo(Articulo articulo) {
@@ -46,7 +32,7 @@ public class Carrito {
     }
     
     public List<Articulo> getArticulos() {
-        return new ArrayList<>(articulos); // Retorna copia para evitar modificaciones externas
+        return new ArrayList<>(articulos);
     }
     
     public void vaciarCarrito() {
