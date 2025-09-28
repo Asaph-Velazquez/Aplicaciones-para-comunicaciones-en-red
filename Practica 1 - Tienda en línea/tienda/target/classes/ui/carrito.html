@@ -44,15 +44,15 @@
   </div>
   
   <script>
+    // ===== VARIABLES GLOBALES =====
     let carritoData = [];
     
-    // Función para cargar carrito desde localStorage
+    // ===== FUNCIONES DE CARGA DE DATOS =====
     function cargarCarritoDesdeStorage() {
       try {
         const carritoTemporal = localStorage.getItem('carritoTemporal');
         if (carritoTemporal) {
           carritoData = JSON.parse(carritoTemporal);
-          console.log("Carrito cargado desde localStorage:", carritoData);
           return true;
         }
         return false;
@@ -62,35 +62,17 @@
       }
     }
     
-    // Nueva función que Java llama con array completo y total
     function mostrarCarritoCompleto(carritoArrayJson, totalCarrito) {
       try {
-        // Parsear el array JSON que viene de Java
         carritoData = JSON.parse(carritoArrayJson);
-        console.log("Carrito recibido desde Java:", carritoData);
-        console.log("Total:", totalCarrito);
-        
         renderizarCarrito();
       } catch (error) {
         console.error("Error al parsear carrito desde Java:", error);
-        mostrarError("Error al cargar el carrito desde Java");
+        mostrarError("Error al cargar el carrito");
       }
     }
     
-    // Función para mostrar errores
-    function mostrarError(mensaje) {
-      const itemsContainer = document.getElementById('carrito-items');
-      itemsContainer.innerHTML = `
-        <div class="error-message" style="text-align: center; padding: 40px; color: #e53e3e; background: #fed7d7; border-radius: 8px; margin: 20px 0;">
-          <h3>⚠️ Error</h3>
-          <p>${mensaje}</p>
-        </div>
-      `;
-    }
-    
-    // Función legacy para compatibilidad
     function mostrarCarrito(carritoString) {
-      console.log("Datos del carrito recibidos (string):", carritoString);
       parseCarritoData(carritoString);
       renderizarCarrito();
     }
@@ -104,6 +86,17 @@
       }
     }
     
+    // ===== FUNCIONES DE RENDERIZADO =====
+    function mostrarError(mensaje) {
+      const itemsContainer = document.getElementById('carrito-items');
+      itemsContainer.innerHTML = `
+        <div class="error-message" style="text-align: center; padding: 40px; color: #e53e3e; background: #fed7d7; border-radius: 8px; margin: 20px 0;">
+          <h3>⚠️ Error</h3>
+          <p>${mensaje}</p>
+        </div>
+      `;
+    }
+    
     function renderizarCarrito() {
       const itemsContainer = document.getElementById('carrito-items');
       const contadorElement = document.getElementById('contador');
@@ -112,17 +105,14 @@
       const accionesElement = document.getElementById('acciones');
       const totalAmountElement = document.getElementById('total-amount');
       
-      // Limpiar contenido
       itemsContainer.innerHTML = '';
       
       if (!carritoData || carritoData.length === 0) {
-        // Mostrar carrito vacío
         vacioElement.style.display = 'block';
         totalElement.style.display = 'none';
         accionesElement.style.display = 'none';
         contadorElement.textContent = '0 artículos';
       } else {
-        // Mostrar items
         vacioElement.style.display = 'none';
         totalElement.style.display = 'block';
         accionesElement.style.display = 'flex';
@@ -150,57 +140,43 @@
           total += Number(item.precio);
         });
         
-        // Actualizar contador y total
         contadorElement.textContent = `${carritoData.length} artículo${carritoData.length !== 1 ? 's' : ''}`;
         totalAmountElement.textContent = `$${total.toFixed(2)}`;
       }
     }
     
+    // ===== FUNCIONES DE ACCIONES DEL CARRITO =====
     function procederCompra() {
-      //TODO
+      
     }
     
     function vaciarCarrito() {
-      const cantidadItems = carritoData.length;
-
-      // Limpiar datos
       carritoData = [];
       localStorage.removeItem('carritoTemporal');
-      
       renderizarCarrito();
     }
     
-    // Función para eliminar un producto específico del carrito
     function eliminarProducto(index) {
-      const producto = carritoData[index];
-        carritoData.splice(index, 1);
-        if (carritoData.length > 0) {
-          localStorage.setItem('carritoTemporal', JSON.stringify(carritoData));
-        } else {
-          localStorage.removeItem('carritoTemporal');
-        }
-        renderizarCarrito();
+      carritoData.splice(index, 1);
+      if (carritoData.length > 0) {
+        localStorage.setItem('carritoTemporal', JSON.stringify(carritoData));
+      } else {
+        localStorage.removeItem('carritoTemporal');
+      }
+      renderizarCarrito();
     }
     
-    // Función para inicializar el carrito
+    // ===== INICIALIZACIÓN =====
     function inicializarCarrito() {
-      console.log("Inicializando carrito...");
-      
-      // Intentar cargar desde localStorage primero
       if (cargarCarritoDesdeStorage()) {
-        console.log("Carrito cargado desde localStorage");
         renderizarCarrito();
       } else {
-        console.log("No hay carrito en localStorage, mostrando vacío");
-        // Esperar a que Java llame a mostrarCarritoCompleto o mostrar vacío
         renderizarCarrito();
       }
     }
     
-    // Inicializar cuando se carga la página
     document.addEventListener('DOMContentLoaded', inicializarCarrito);
     
-    // También inicializar inmediatamente por si DOMContentLoaded ya pasó
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', inicializarCarrito);
     } else {

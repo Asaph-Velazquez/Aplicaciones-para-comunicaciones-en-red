@@ -49,15 +49,15 @@
   </main>
   
   <script>
+    // ===== VARIABLES GLOBALES =====
     let todosLosProductos = [];
     
-    // Función para limpiar todos los productos
+    // ===== FUNCIONES DE GESTIÓN DE PRODUCTOS =====
     function limpiarProductos() {
       document.getElementById('producto').innerHTML = '';
       actualizarContadorProductos(0);
     }
     
-    // Función para agregar un producto (mantiene los anteriores)
     function agregarProducto(jsonStr) {
       const data = JSON.parse(jsonStr);
       todosLosProductos.push(data);
@@ -105,12 +105,22 @@
       actualizarContadorProductos(todosLosProductos.length);
     }
     
-    // Función legacy para compatibilidad (muestra solo un producto)
     function mostrarProducto(jsonStr) {
       limpiarProductos();
       agregarProducto(jsonStr);
     }
     
+    function mostrarEstadoVacio() {
+      document.getElementById('producto').innerHTML = `
+        <div class="empty-state">
+          <span class="emoji">📦</span>
+          <h3>No hay productos disponibles</h3>
+          <p>El catálogo está vacío o no se pudo conectar al servidor</p>
+        </div>
+      `;
+    }
+    
+    // ===== FUNCIONES DE INTERFAZ =====
     function actualizarContadorProductos(cantidad) {
       document.getElementById('total-productos').textContent = cantidad;
     }
@@ -133,51 +143,25 @@
       location.reload();
     }
     
-    function mostrarEstadoVacio() {
-      document.getElementById('producto').innerHTML = `
-        <div class="empty-state">
-          <span class="emoji">📦</span>
-          <h3>No hay productos disponibles</h3>
-          <p>El catálogo está vacío o no se pudo conectar al servidor</p>
-        </div>
-      `;
-    }
-    
-    // Función para agregar producto al carrito
+    // ===== FUNCIONES DE CARRITO =====
     function agregarAlCarrito(productoJson) {
       try {
         const producto = JSON.parse(decodeURIComponent(productoJson));
-        
-        // Agregar ID único al producto
         producto.id = Date.now() + Math.random();
         
-        // Guardar en localStorage para que CarritoGUI lo pueda usar
         let carrito = JSON.parse(localStorage.getItem('carritoTemporal') || '[]');
         carrito.push(producto);
         localStorage.setItem('carritoTemporal', JSON.stringify(carrito));
         
-        // Mostrar confirmación
-        alert(`✅ "${producto.nombre}" agregado al carrito\n\nTotal de artículos: ${carrito.length}`);
-        
-        // Opción 1: Abrir carrito en nueva ventana
         window.open('carrito.html', '_blank');
-        
-        
-        // Opción 3: Pregunta qué quiere hacer
-        if (confirm('¿Quieres ver el carrito ahora?')) {
-          window.open('carrito.html', '_blank');
-        }
-        
       } catch (error) {
         console.error('Error al agregar al carrito:', error);
-        alert('❌ Error al agregar el producto al carrito');
       }
     }
     
-    // Configurar búsqueda en tiempo real
+    // ===== INICIALIZACIÓN =====
     document.getElementById('buscar').addEventListener('input', filtrarProductos);
     
-    // Timeout para mostrar estado vacío si no llegan productos
     setTimeout(() => {
       if (todosLosProductos.length === 0) {
         mostrarEstadoVacio();
