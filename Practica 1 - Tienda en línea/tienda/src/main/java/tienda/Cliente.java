@@ -15,6 +15,7 @@ import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 
 public class Cliente extends Application {
+    private WebEngine engine; // Variable de instancia para acceder desde procesarCompra
 
     public static List<JSONObject> obtenerProductos() throws Exception{
         List<JSONObject> productos = new ArrayList<>();
@@ -36,7 +37,7 @@ public class Cliente extends Application {
     @Override
     public void start(Stage stage) {
         WebView view = new WebView();
-        WebEngine engine = view.getEngine();
+        this.engine = view.getEngine();
         engine.load(getClass().getResource("/ui/index.html").toExternalForm());
 
         // Cuando cargue la página, conectamos el socket y mandamos el JSON
@@ -44,6 +45,7 @@ public class Cliente extends Application {
             if (n == javafx.concurrent.Worker.State.SUCCEEDED) {
                 try {
                     JSObject window = (JSObject) engine.executeScript("window");
+                    window.setMember("clienteJava", this);
                     window.call("limpiarProductos");
                     
                     for (JSONObject producto : obtenerProductos()) {
@@ -55,6 +57,25 @@ public class Cliente extends Application {
 
         stage.setScene(new Scene(view, 800, 600));
         stage.show();
+    }
+
+    // Método que será llamado desde JavaScript
+    public void procesarCompra(String carritoJSON){
+        try {
+            System.out.println("Procesando compra con carrito: " + carritoJSON);
+            Carrito carrito = new Carrito(carritoJSON);
+            carrito.enviarAlServidor();
+            JSObject window = (JSObject) engine.executeScript("window");
+            window.call("alert", "¡Compra procesada exitosamente! Total: $" + carrito.getTotal());
+        } catch (Exception e) {
+            e.printStackTrace();
+            try {
+                JSObject window = (JSObject) engine.executeScript("window");
+                window.call("alert", "Error al procesar la compra: " + e.getMessage());
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
     }
 
     public static void main(String[] args) {

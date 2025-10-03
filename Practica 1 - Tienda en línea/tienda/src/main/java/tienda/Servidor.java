@@ -27,6 +27,16 @@ public class Servidor {
                 System.out.println("JSON enviado al cliente: " + articulo1.toJSON().toJSONString());
                 System.out.println("JSON enviado al cliente: " + articulo2.toJSON().toJSONString());
                 
+                //Flujo para recibir la compra del cliente
+                //BufferedReader lector = new BufferedReader(new InputStreamReader(cliente.getInputStream(), "UTF-8"));
+                //String mensajeCarrito = lector.readLine();
+                //if(mensajeCarrito != null && mensajeCarrito.startsWith("COMPRA:")){
+                //    String carritoJSON = mensajeCarrito.substring(7);
+                //    
+                //    System.out.println("Compra recibida del cliente: " + carritoJSON);
+                //}
+
+
                 escritor.close();
                 cliente.close();
                 System.out.println("Conexión cerrada con el cliente");

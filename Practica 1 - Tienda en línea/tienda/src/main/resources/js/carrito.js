@@ -101,7 +101,19 @@ function renderizarCarrito() {
 
 // ===== FUNCIONES DE ACCIONES DEL CARRITO =====
 function procederCompra() {
-  
+    if (carritoData.length==0){
+        alert("El carrito está vacío. Agrega productos antes de proceder a la compra.");
+    }else{
+        const carritoJson = JSON.stringify(carritoData);
+        // Llamar al método Java del cliente usando el nombre correcto
+        if (window.clienteJava && window.clienteJava.procesarCompra) {
+            window.clienteJava.procesarCompra(carritoJson);
+            vaciarCarrito();
+        } else {
+            console.error("Método clienteJava.procesarCompra no disponible");
+            alert("Error: No se puede procesar la compra en este momento");
+        }
+    }
 }
 
 function vaciarCarrito() {

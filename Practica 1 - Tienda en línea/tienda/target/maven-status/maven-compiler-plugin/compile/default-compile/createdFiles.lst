@@ -1,4 +1,5 @@
 tienda\Cliente.class
+tienda\Carrito.class
 tienda\CarritoGUI.class
 tienda\Servidor.class
 tienda\Articulo.class
