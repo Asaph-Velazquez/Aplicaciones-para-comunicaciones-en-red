@@ -21,14 +21,20 @@ public class Cliente extends Application {
         List<JSONObject> productos = new ArrayList<>();
 
         Socket cliente = new Socket("localhost", 1234);
+        PrintWriter escritor = new PrintWriter(cliente.getOutputStream(), true);
         BufferedReader buffer = new BufferedReader(new InputStreamReader(cliente.getInputStream(), StandardCharsets.UTF_8));
+
+        // Enviar solicitud de productos
+        escritor.println("OBTENER_PRODUCTOS");
 
         JSONParser parser = new JSONParser();
         String mensaje;
-        while ((mensaje = buffer.readLine()) != null) {
+        while ((mensaje = buffer.readLine()) != null && !"FIN_PRODUCTOS".equals(mensaje)) {
             JSONObject json = (JSONObject) parser.parse(mensaje);
             productos.add(json);
         }
+        
+        escritor.close();
         buffer.close();
         cliente.close();
         return productos;
@@ -59,14 +65,32 @@ public class Cliente extends Application {
         stage.show();
     }
 
+    // Método que será llamado desde JavaScript para obtener productos
+    public List<JSONObject> obtenerProductosParaJS(){
+        try {
+            return obtenerProductos();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new ArrayList<>();
+        }
+    }
+    
     // Método que será llamado desde JavaScript
     public void procesarCompra(String carritoJSON){
         try {
             System.out.println("Procesando compra con carrito: " + carritoJSON);
             Carrito carrito = new Carrito(carritoJSON);
-            carrito.enviarAlServidor();
+            
+            boolean compraExitosa = carrito.enviarAlServidor();
+            
             JSObject window = (JSObject) engine.executeScript("window");
-            window.call("alert", "¡Compra procesada exitosamente! Total: $" + carrito.getTotal());
+            if (compraExitosa) {
+                window.call("alert", "¡Compra procesada exitosamente! Total: $" + String.format("%.2f", carrito.getTotal()) + "\nEl stock de los productos ha sido actualizado.");
+                // Recargar productos para mostrar stock actualizado
+                window.call("recargarProductosDesdeServidor");
+            } else {
+                window.call("alert", "Error: No se pudo procesar la compra.\nPosibles causas:\n- Stock insuficiente de algún producto\n- Producto no encontrado\n\nInténtalo de nuevo.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
             try {

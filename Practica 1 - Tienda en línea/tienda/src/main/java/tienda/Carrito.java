@@ -65,17 +65,28 @@ public class Carrito {
     }
 
     //Metodos para enviar al servidor
-    public void enviarAlServidor(){
+    public boolean enviarAlServidor(){
         try{
             Socket socket = new Socket("localhost",1234);
             PrintWriter salida = new PrintWriter(socket.getOutputStream(), true);
+            BufferedReader entrada = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
             //enviar la informacion del carrito al servidor
             JSONObject carritoCompleto = toJSON();
             salida.println("COMPRA:" + carritoCompleto.toJSONString());
+            
+            // Esperar confirmación del servidor
+            String respuesta = entrada.readLine();
+            System.out.println("Respuesta del servidor: " + respuesta);
+            
+            entrada.close();
+            salida.close();
             socket.close();
+            
+            return respuesta != null && respuesta.startsWith("COMPRA_EXITOSA");
         }catch(Exception e){
             e.printStackTrace();
+            return false;
         }
     }
 

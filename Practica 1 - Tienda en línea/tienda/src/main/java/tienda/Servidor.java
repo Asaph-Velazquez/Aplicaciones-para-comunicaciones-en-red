@@ -1,9 +1,34 @@
 package tienda;
 import java.net.*;
 import java.io.*;
-import org.json.simple.*;
+import java.util.List;
 
 public class Servidor {
+    private static Inventario inventario = Inventario.getInstance();
+    
+    // Método para procesar las compras recibidas
+    public static void procesarCompra(String carritoJSON) {
+        try {
+            System.out.println("=== PROCESANDO COMPRA ===");
+            System.out.println("Datos del carrito: " + carritoJSON);
+        
+            inventario.mostrarEstadoInventario();
+            boolean compraExitosa = inventario.procesarCompra(carritoJSON);
+            if (compraExitosa) {
+                System.out.println("Compra procesada exitosamente en el inventario");
+                inventario.mostrarEstadoInventario();
+            } else {
+                System.out.println("ERROR: No se pudo procesar la compra - Stock insuficiente o producto no encontrado");
+            }
+            
+            System.out.println("========================");
+            
+        } catch (Exception e) {
+            System.out.println("Error al procesar la compra: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+    
     public static void main(String[] args) {
         try{
             ServerSocket servidor = new ServerSocket(1234);
@@ -13,31 +38,41 @@ public class Servidor {
                 Socket cliente = servidor.accept();
                 System.out.println("Cliente conectado en el puerto: " + cliente.getPort() + " desde la IP: " + cliente.getInetAddress());
 
-                //Flujo para enviar el json al cliente
-                Articulo articulo1 = new Articulo("Electrónica", "Laptop", "Dell", "Laptop para uso personal", 1500.0, 10);
-                Articulo articulo2 = new Articulo("Hogar", "Aspiradora", "Dyson", "Aspiradora potente", 300.0, 5);
-                Articulo articulo3 = new Articulo("Comedor", "Mesa", "Ikea", "Mesa de comedor grande", 200.0, 3);
-
+                // Crear streams de entrada y salida
                 PrintWriter escritor = new PrintWriter(new OutputStreamWriter(cliente.getOutputStream(), "UTF-8"), true);
-                escritor.println(articulo1.toJSON().toJSONString());
-                escritor.println(articulo2.toJSON().toJSONString());
-                escritor.println(articulo3.toJSON().toJSONString());
-                escritor.flush();
+                BufferedReader lector = new BufferedReader(new InputStreamReader(cliente.getInputStream(), "UTF-8"));
                 
-                System.out.println("JSON enviado al cliente: " + articulo1.toJSON().toJSONString());
-                System.out.println("JSON enviado al cliente: " + articulo2.toJSON().toJSONString());
+                // Leer el tipo de solicitud del cliente
+                String solicitud = lector.readLine();
+                System.out.println("Solicitud recibida: " + solicitud);
                 
-                //Flujo para recibir la compra del cliente
-                //BufferedReader lector = new BufferedReader(new InputStreamReader(cliente.getInputStream(), "UTF-8"));
-                //String mensajeCarrito = lector.readLine();
-                //if(mensajeCarrito != null && mensajeCarrito.startsWith("COMPRA:")){
-                //    String carritoJSON = mensajeCarrito.substring(7);
-                //    
-                //    System.out.println("Compra recibida del cliente: " + carritoJSON);
-                //}
-
+                if("OBTENER_PRODUCTOS".equals(solicitud)){
+                    // Flujo para enviar productos del inventario al cliente
+                    List<Articulo> productos = inventario.obtenerTodosLosProductos();
+                    
+                    for (Articulo producto : productos) {
+                        escritor.println(producto.toJSON().toJSONString());
+                    }
+                    escritor.println("FIN_PRODUCTOS"); // Marcador para indicar fin de productos
+                    escritor.flush();
+                    
+                    System.out.println("Productos del inventario enviados al cliente (" + productos.size() + " productos)");
+                    
+                } else if(solicitud != null && solicitud.startsWith("COMPRA:")){
+                    // Flujo para recibir y procesar compra del cliente
+                    String carritoJSON = solicitud.substring(7);
+                    System.out.println("Compra recibida del cliente: " + carritoJSON);
+                    boolean compraExitosa = inventario.procesarCompra(carritoJSON);
+                    
+                    if (compraExitosa) {
+                        escritor.println("COMPRA_EXITOSA: La compra ha sido procesada correctamente y el stock ha sido actualizado");
+                    } else {
+                        escritor.println("COMPRA_ERROR: No se pudo procesar la compra - Stock insuficiente o producto no encontrado");
+                    }
+                }
 
                 escritor.close();
+                lector.close();
                 cliente.close();
                 System.out.println("Conexión cerrada con el cliente");
             }

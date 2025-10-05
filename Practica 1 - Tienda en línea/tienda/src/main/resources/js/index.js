@@ -92,6 +92,29 @@ function recargarProductos() {
   location.reload();
 }
 
+// Función para recargar productos desde el servidor sin recargar toda la página
+function recargarProductosDesdeServidor() {
+  try {
+    // Limpiar productos actuales
+    limpiarProductos();
+    
+    // Obtener productos actualizados del servidor Java
+    if (window.clienteJava && window.clienteJava.obtenerProductosParaJS) {
+      const productos = window.clienteJava.obtenerProductosParaJS();
+      productos.forEach(producto => {
+        agregarProducto(producto.toJSONString());
+      });
+    } else {
+      // Fallback: recargar toda la página
+      location.reload();
+    }
+  } catch (error) {
+    console.error('Error al recargar productos:', error);
+    // Fallback: recargar toda la página
+    location.reload();
+  }
+}
+
 // ===== FUNCIONES DE CARRITO =====
 function agregarAlCarrito(productoJson) {
   try {
