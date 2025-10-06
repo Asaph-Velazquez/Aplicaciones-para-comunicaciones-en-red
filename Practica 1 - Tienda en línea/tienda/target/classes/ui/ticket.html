@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ticket de Compra - Tienda en Línea</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="../css/ticket.css">
+</head>
+<body>
+  <div class="container">
+    <div class="ticket-container">
+      <div class="ticket-header">
+        <h1 class="ticket-titulo">🎫 Ticket de Compra</h1>
+        <div class="ticket-info">
+          <div class="ticket-fecha" id="fecha-compra"></div>
+          <div class="ticket-numero" id="numero-ticket">Ticket #<span id="ticket-id">0001</span></div>
+        </div>
+      </div>
+      
+      <div class="ticket-content" id="ticket-content">
+        <!-- Contenido del ticket se insertará aquí -->
+      </div>
+      
+      <div class="ticket-footer">
+        <div class="ticket-total">
+          <div class="total-label">Total Pagado:</div>
+          <div class="total-amount" id="total-compra">$0.00</div>
+        </div>
+        
+        <div class="ticket-message">
+          <p>¡Gracias por su compra!</p>
+          <p>Conserve este ticket como comprobante de su compra.</p>
+        </div>
+        
+        <div class="ticket-actions">
+          <button class="btn btn-primary" onclick="volverInicio()">
+            🏠 Volver al Inicio
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script src="../js/ticket.js"></script>
+</body>
+</html>

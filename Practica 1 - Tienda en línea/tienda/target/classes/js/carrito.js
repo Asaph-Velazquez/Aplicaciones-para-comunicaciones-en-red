@@ -108,7 +108,10 @@ function procederCompra() {
         // Llamar al método Java del cliente usando el nombre correcto
         if (window.clienteJava && window.clienteJava.procesarCompra) {
             window.clienteJava.procesarCompra(carritoJson);
-            vaciarCarrito();
+            // Redirigir al ticket después de procesar la compra
+            setTimeout(() => {
+                window.location.href = 'ticket.html';
+            }, 1000); 
         } else {
             console.error("Método clienteJava.procesarCompra no disponible");
             alert("Error: No se puede procesar la compra en este momento");

@@ -24,14 +24,17 @@ public class Inventario {
         // Productos iniciales del inventario
         Articulo articulo1 = new Articulo("Electrónica", "Laptop", "Dell", "Laptop para uso personal", 1500.0, 10);
         Articulo articulo2 = new Articulo("Hogar", "Aspiradora", "Dyson", "Aspiradora potente", 300.0, 5);
-        Articulo articulo3 = new Articulo("Comedor", "Mesa", "Ikea", "Mesa de comedor grande", 200.0, 3);
-        Articulo articulo4 = new Articulo("Electrónica", "ALIENWARE", "Dell", "Laptop para uso personal", 1500.0, 10);
+        Articulo articulo3 = new Articulo("Comedor", "Mesa", "Ikea", "Mesa de comedor grande", 200.0, 5);
+        Articulo articulo4 = new Articulo("Electrónica", "Rog Ally", "Asus", "Laptop para uso gamer", 1200.0, 5);
+        Articulo ariculo5 = new Articulo("Electrónica", "iPhone 15", "Apple", "Smartphone de última generación", 999.0, 15);
+
 
         // Usar nombre como clave única
         productos.put("Laptop-Dell", articulo1);
         productos.put("Aspiradora-Dyson", articulo2);
         productos.put("Mesa-Ikea", articulo3);
-        productos.put("Laptop2-Dell", articulo4);
+        productos.put("Rog Ally-Asus", articulo4);
+        productos.put("iPhone 15-Apple", ariculo5);
         
         System.out.println("Inventario inicializado con " + productos.size() + " productos");
     }

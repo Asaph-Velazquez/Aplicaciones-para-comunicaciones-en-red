@@ -1,0 +1,256 @@
+/* ===== ESTILOS PARA TICKET DE COMPRA ===== */
+
+.ticket-container {
+  max-width: 800px;
+  margin: 20px auto;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+}
+
+.ticket-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 30px;
+  text-align: center;
+}
+
+.ticket-titulo {
+  font-size: 2.5em;
+  margin: 0 0 15px 0;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ticket-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ticket-fecha {
+  font-size: 1.1em;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.ticket-numero {
+  font-size: 1.2em;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+.ticket-content {
+  padding: 30px;
+  background: #f8fafc;
+}
+
+.ticket-items {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ticket-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ticket-item:last-child {
+  border-bottom: none;
+}
+
+.ticket-item-info {
+  flex: 1;
+}
+
+.ticket-item-nombre {
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 4px;
+  font-size: 1.1em;
+}
+
+.ticket-item-details {
+  display: flex;
+  gap: 15px;
+  font-size: 0.9em;
+  color: #718096;
+}
+
+.ticket-item-detail {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.ticket-item-precio {
+  font-weight: 700;
+  color: #2d3748;
+  font-size: 1.2em;
+  min-width: 80px;
+  text-align: right;
+}
+
+.ticket-summary {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ticket-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.ticket-summary-row:last-child {
+  border-bottom: none;
+  font-weight: 700;
+  font-size: 1.1em;
+  color: #2d3748;
+  padding-top: 12px;
+}
+
+.ticket-summary-label {
+  color: #4a5568;
+}
+
+.ticket-summary-value {
+  font-weight: 600;
+  color: #2d3748;
+}
+
+.ticket-footer {
+  background: white;
+  padding: 30px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.ticket-total {
+  text-align: center;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(72, 187, 120, 0.3);
+}
+
+.total-label {
+  font-size: 1.2em;
+  margin-bottom: 8px;
+  opacity: 0.9;
+}
+
+.total-amount {
+  font-size: 2.5em;
+  font-weight: 700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ticket-message {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #4a5568;
+  line-height: 1.6;
+}
+
+.ticket-message p {
+  margin: 8px 0;
+  font-size: 1.1em;
+}
+
+.ticket-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+  .ticket-container {
+    margin: 10px;
+    border-radius: 8px;
+  }
+  
+  .ticket-header {
+    padding: 20px;
+  }
+  
+  .ticket-titulo {
+    font-size: 2em;
+  }
+  
+  .ticket-info {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .ticket-content {
+    padding: 20px;
+  }
+  
+  .ticket-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .ticket-item-details {
+    flex-direction: column;
+    gap: 5px;
+  }
+  
+  .ticket-item-precio {
+    text-align: left;
+    min-width: auto;
+  }
+  
+  .ticket-actions {
+    flex-direction: column;
+  }
+  
+  .ticket-actions .btn {
+    width: 100%;
+  }
+}
+
+/* ===== ESTILOS PARA IMPRESIÓN ===== */
+@media print {
+  .ticket-container {
+    box-shadow: none;
+    border: 1px solid #000;
+    max-width: none;
+    margin: 0;
+  }
+  
+  .ticket-actions {
+    display: none;
+  }
+  
+  .ticket-header {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+  }
+  
+  .ticket-total {
+    background: #f0f0f0 !important;
+    color: #000 !important;
+  }
+}
