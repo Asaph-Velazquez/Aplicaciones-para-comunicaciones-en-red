@@ -15,7 +15,7 @@ import org.json.simple.*;
 import org.json.simple.parser.JSONParser;
 
 public class Cliente extends Application {
-    private WebEngine engine; // Variable de instancia para acceder desde procesarCompra
+    private WebEngine engine;
 
     public static List<JSONObject> obtenerProductos() throws Exception{
         List<JSONObject> productos = new ArrayList<>();
