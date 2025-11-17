@@ -5,7 +5,7 @@ import java.nio.ByteBuffer;
 
 public class Server {
     private static final int WINDOW_SIZE = 10; // Tamaño de la ventana Go-Back-N
-    private static final int TIMEOUT = 500; // Timeout en ms
+    private static final int TIMEOUT = 500; // Timeout en ms                    
     private static final int HEADER_SIZE = 8; // 4 bytes seq + 4 bytes total
     
     public static void main(String[] args) {
@@ -76,7 +76,7 @@ public class Server {
         int base = 0; // Base de la ventana
         int nextSeqNum = 0; // Siguiente número de secuencia a enviar
         int totalPackets = paquetes.length;
-        
+
         socket.setSoTimeout(TIMEOUT);
         
         System.out.println("\n=== Iniciando transmisión Go-Back-N ===");
