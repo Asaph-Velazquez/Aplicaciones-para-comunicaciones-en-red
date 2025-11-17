@@ -1,0 +1,78 @@
+version: '3.9'
+
+services:
+  # Backend Java - Servidor UDP
+  backend:
+    build:
+      context: ./Chat\ Grupal
+      dockerfile: Dockerfile
+    container_name: chat-backend
+    ports:
+      - "5000:5000/udp"
+    networks:
+      - chat-network
+    environment:
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Bridge Node.js - Traduce UDP ↔ WebSocket
+  bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chat-bridge
+    ports:
+      - "8080:8080"
+      - "5000:5000/udp"
+    depends_on:
+      - backend
+    networks:
+      - chat-network
+    environment:
+      NODE_ENV: "production"
+      UDP_PORT: "5000"
+      WS_PORT: "8080"
+      BACKEND_HOST: "backend"
+      BACKEND_PORT: "5000"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Frontend Angular - Servido por Nginx
+  frontend:
+    build:
+      context: ./FrontEnd
+      dockerfile: Dockerfile
+    container_name: chat-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - bridge
+    networks:
+      - chat-network
+    environment:
+      NGINX_HOST: "localhost"
+      NGINX_PORT: "80"
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  chat-network:
+    driver: bridge
+
+volumes:
+  backend-logs:
+  bridge-logs:
+  frontend-logs:

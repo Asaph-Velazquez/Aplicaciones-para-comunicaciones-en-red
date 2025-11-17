@@ -1,0 +1,170 @@
+<div class="chat-container">
+  <!-- Header -->
+  <header class="chat-header">
+    <div class="header-left">
+      <h1>💬 Chat Grupal</h1>
+      @if (chatService.usuarioActual()) {
+        <span class="usuario-badge">{{ chatService.usuarioActual()?.nombre }}</span>
+      }
+    </div>
+    <button class="btn-logout" (click)="cerrarSesion()">
+      🚪 Salir
+    </button>
+  </header>
+
+  <div class="chat-content">
+    <!-- Botón para minimizar/maximizar sidebar (siempre visible) -->
+    @if (!mostrarUnirse() && chatService.salaActual()) {
+      <button 
+        class="btn-sidebar-toggle" 
+        (click)="mostrarUsuarios.set(!mostrarUsuarios())"
+        [title]="mostrarUsuarios() ? 'Minimizar usuarios' : 'Maximizar usuarios'"
+      >
+        {{ mostrarUsuarios() ? '◀' : '▶' }}
+      </button>
+    }
+
+    <!-- Sidebar con usuarios -->
+    @if (!mostrarUnirse() && chatService.salaActual()) {
+      <aside class="sidebar" [class.hidden]="!mostrarUsuarios()">
+        <div class="sidebar-header">
+          <h3>👥 Usuarios en {{ chatService.salaActual()?.nombre }}</h3>
+          <button class="btn-icon" (click)="mostrarUsuarios.set(!mostrarUsuarios())" style="display: none;">
+            {{ mostrarUsuarios() ? '◀' : '▶' }}
+          </button>
+        </div>
+        <ul class="usuarios-list">
+          @for (usuario of chatService.usuariosEnSala(); track usuario) {
+            <li 
+              class="usuario-item"
+              [class.usuario-actual]="usuario === chatService.usuarioActual()?.nombre"
+              (click)="seleccionarUsuarioPrivado(usuario)"
+            >
+              <span class="status-dot"></span>
+              {{ usuario }}
+              @if (usuario === chatService.usuarioActual()?.nombre) {
+                <span class="badge-tu">(Tú)</span>
+              }
+            </li>
+          }
+        </ul>
+      </aside>
+    }
+
+    <!-- Área principal de chat -->
+    <main class="main-chat">
+      <!-- Modal para unirse a sala -->
+      @if (mostrarUnirse()) {
+        <div class="unirse-sala-modal">
+          <div class="unirse-card">
+            <h2>🚀 Unirse a una Sala</h2>
+            <p>Ingresa el nombre de la sala a la que deseas unirte</p>
+            <form (ngSubmit)="unirseASala()" class="unirse-form">
+              <input
+                type="text"
+                [(ngModel)]="nombreSala"
+                name="sala"
+                placeholder="Nombre de la sala"
+                class="input-sala"
+                required
+              />
+              <button type="submit" class="btn-unirse" [disabled]="!nombreSala()">
+                Unirse
+              </button>
+            </form>
+          </div>
+        </div>
+      } @else {
+        <!-- Chat activo -->
+        <div class="chat-area">
+          <!-- Info de sala -->
+          <div class="sala-header">
+            <div>
+              <h2>📍 {{ chatService.salaActual()?.nombre }}</h2>
+              @if (modoPrivado() && usuarioSeleccionado()) {
+                <p class="modo-privado">
+                  🔒 Mensaje privado para: <strong>{{ usuarioSeleccionado() }}</strong>
+                  <button class="btn-cancelar-privado" (click)="cancelarModoPrivado()">
+                    ✕
+                  </button>
+                </p>
+              }
+            </div>
+            <button class="btn-abandonar" (click)="abandonarSala()">
+              Abandonar Sala
+            </button>
+          </div>
+
+          <!-- Mensajes -->
+          <div class="mensajes-container" #messagesContainer>
+            @if (obtenerMensajesFiltrados().length === 0) {
+              <div class="no-mensajes">
+                <p>👋 No hay mensajes aún. ¡Sé el primero en escribir!</p>
+              </div>
+            } @else {
+              @for (mensaje of obtenerMensajesFiltrados(); track mensaje.id) {
+                <div 
+                  class="mensaje"
+                  [class.mensaje-propio]="esMensajePropio(mensaje)"
+                  [class.mensaje-privado]="esMensajePrivado(mensaje)"
+                >
+                  <div class="mensaje-header">
+                    <span class="mensaje-usuario">{{ mensaje.usuario }}</span>
+                    @if (mensaje.tipo === 'privado') {
+                      <span class="badge-privado">🔒 Privado</span>
+                    }
+                    <span class="mensaje-hora">{{ formatearHora(mensaje.timestamp) }}</span>
+                  </div>
+                  <div class="mensaje-contenido" [class.mensaje-emoji]="mensaje.tipo === 'emoji'">
+                    {{ mensaje.contenido }}
+                  </div>
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Input de mensaje -->
+          <div class="input-area">
+            @if (mostrarEmojis()) {
+              <div class="emoji-picker">
+                @for (emoji of emojis; track emoji) {
+                  <button 
+                    class="emoji-btn"
+                    (click)="enviarEmoji(emoji)"
+                  >
+                    {{ emoji }}
+                  </button>
+                }
+              </div>
+            }
+            
+            <form (ngSubmit)="enviarMensaje()" class="mensaje-form">
+              <button 
+                type="button" 
+                class="btn-emoji"
+                (click)="toggleEmojis()"
+              >
+                😀
+              </button>
+              <input
+                type="text"
+                [(ngModel)]="nuevoMensaje"
+                name="mensaje"
+                placeholder="Escribe un mensaje..."
+                class="input-mensaje"
+                [attr.maxlength]="500"
+              />
+              <button 
+                type="submit" 
+                class="btn-enviar"
+                [disabled]="!nuevoMensaje()"
+              >
+                📤 Enviar
+              </button>
+            </form>
+          </div>
+        </div>
+      }
+    </main>
+  </div>
+</div>

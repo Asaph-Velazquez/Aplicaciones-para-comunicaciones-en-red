@@ -1,0 +1,50 @@
+<div class="login-container">
+  <div class="login-card">
+    <div class="login-header">
+      <h1>💬 Chat Grupal</h1>
+      <p>Bienvenido al sistema de chat</p>
+    </div>
+
+    <div class="login-form">
+      <div class="form-group">
+        <label for="username">Nombre de Usuario</label>
+        <input
+          type="text"
+          id="username"
+          [value]="nombreUsuario()"
+          (input)="actualizarNombre($event)"
+          (keyup.enter)="iniciarSesion()"
+          name="username"
+          placeholder="Ingrese su nombre"
+          [disabled]="cargando()"
+          class="form-input"
+          maxlength="20"
+        />
+      </div>
+
+      @if (errorMensaje()) {
+        <div class="error-message">
+          ⚠️ {{ errorMensaje() }}
+        </div>
+      }
+
+      <button 
+        type="button" 
+        class="btn-login"
+        (click)="iniciarSesion()"
+        [disabled]="cargando()"
+      >
+        @if (cargando()) {
+          <span class="spinner"></span>
+          Conectando...
+        } @else {
+          Ingresar al Chat
+        }
+      </button>
+    </div>
+
+    <div class="login-footer">
+      <p>Práctica 3 - Redes 2</p>
+    </div>
+  </div>
+</div>
