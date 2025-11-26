@@ -131,7 +131,7 @@ public class ChatController {
     }
 
     /**
-     * Enviar mensaje privado
+     * Enviar mensaje privado (incluye soporte para emojis)
      */
     @MessageMapping("/chat/private")
     public void enviarMensajePrivado(ChatMessage mensaje) {
@@ -140,11 +140,20 @@ public class ChatController {
         logger.info("  De: {}", mensaje.getUsuario());
         logger.info("  Para: {}", mensaje.getDestinatario());
         logger.info("  Mensaje: {}", mensaje.getContenido());
+        logger.info("  Tipo: {}", mensaje.getTipo());
         logger.info("  Timestamp: {}", LocalDateTime.now());
         logger.info("==================================================================");
         
         mensaje.setId(UUID.randomUUID().toString());
-        mensaje.setTipo(ChatMessage.TipoMensaje.PRIVADO);
+        
+        // Si el mensaje es solo emojis pero viene como TEXTO, detectarlo y cambiar el tipo
+        if (mensaje.getTipo() == ChatMessage.TipoMensaje.TEXTO && esEmoji(mensaje.getContenido())) {
+            mensaje.setTipo(ChatMessage.TipoMensaje.EMOJI);
+            logger.info("  Detectado emoji en mensaje privado, tipo cambiado a EMOJI");
+        } else if (mensaje.getTipo() != ChatMessage.TipoMensaje.EMOJI) {
+            mensaje.setTipo(ChatMessage.TipoMensaje.PRIVADO);
+        }
+        
         mensaje.setTimestamp(LocalDateTime.now());
         
         // Enviar al destinatario en su cola privada especifica
@@ -152,7 +161,8 @@ public class ChatController {
             "/queue/private/" + mensaje.getDestinatario(), 
             mensaje
         );
-        logger.info("[SERVIDOR -> CLIENTE] Mensaje privado enviado a: {}", mensaje.getDestinatario());
+        logger.info("[SERVIDOR -> CLIENTE] Mensaje privado enviado a: {} (Tipo: {})", 
+                    mensaje.getDestinatario(), mensaje.getTipo());
         
         // Tambien enviar al remitente para que vea su mensaje
         messagingTemplate.convertAndSend(
@@ -160,5 +170,16 @@ public class ChatController {
             mensaje
         );
         logger.info("[SERVIDOR -> CLIENTE] Copia del mensaje privado enviada al remitente: {}", mensaje.getUsuario());
+    }
+    
+    /**
+     * Detecta si un texto contiene solo emojis
+     */
+    private boolean esEmoji(String texto) {
+        if (texto == null || texto.trim().isEmpty()) {
+            return false;
+        }
+        String emojiPattern = "[\\p{So}\\p{Cn}\\uD83C-\\uDBFF\\uDC00-\\uDFFF]+";
+        return texto.trim().matches(emojiPattern);
     }
 }

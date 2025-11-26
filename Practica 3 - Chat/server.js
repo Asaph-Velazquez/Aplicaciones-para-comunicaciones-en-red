@@ -1,17 +1,3 @@
-/**
- * Servidor UDP-WebSocket Bridge
- * 
- * Propósito: Traduce mensajes UDP (desde clientes Java)
- * a WebSocket (para frontend Angular)
- * 
- * Flujo:
- * Cliente Java UDP:5000 → Node.js:5000 (UDP)
- *                        ↓
- *                   Node.js:8080 (WebSocket)
- *                        ↓
- *                   Frontend Angular (Navegador)
- */
-
 const dgram = require('dgram');
 const express = require('express');
 const http = require('http');
@@ -19,9 +5,10 @@ const WebSocket = require('ws');
 const cors = require('cors');
 
 // Configuración
-const UDP_PORT = 5000;
-const WS_PORT = 8080;
+const UDP_PORT = 5001;  
+const WS_PORT = 8080;   
 const HOST = 'localhost';
+const JAVA_SERVER_PORT = 5000;  
 
 // ============================================================
 // GESTIÓN DE ESTADO - SALAS Y USUARIOS
@@ -236,7 +223,8 @@ function procesarComandoUDP(comando, clientKey, rinfo) {
             sala: sala,
             contenido: contenido,
             timestamp: new Date().toISOString(),
-            privado: false
+            privado: false,
+            tipoMensaje: 'TEXTO'
         });
         
     } else if (tipo === 'LEAVE') {
@@ -268,7 +256,8 @@ function procesarComandoUDP(comando, clientKey, rinfo) {
                     contenido: contenido,
                     timestamp: new Date().toISOString(),
                     privado: true,
-                    destinatario: toUser
+                    destinatario: toUser,
+                    tipoMensaje: 'PRIVADO'
                 }));
             }
         });
@@ -283,7 +272,8 @@ function procesarComandoUDP(comando, clientKey, rinfo) {
                         contenido: contenido,
                         timestamp: new Date().toISOString(),
                         privado: true,
-                        destinatario: toUser
+                        destinatario: toUser,
+                        tipoMensaje: 'PRIVADO'
                     }));
                 }
             });
@@ -335,7 +325,7 @@ function procesarComandoWebSocket(mensaje, ws) {
     const partes = (mensaje.contenido || '').split('|');
     const tipo = partes[0] || mensaje.tipo || null;
 
-    console.log(`[COMANDO WS] ${tipo} - Usuario: ${info?.usuario}`);
+    console.log(`[COMANDO WS] Tipo: ${tipo}, mensaje.tipo: ${mensaje.tipo} - Usuario: ${info?.usuario}`);
 
     if (tipo === 'JOIN') {
         const usuario = mensaje.usuario || partes[1];
@@ -349,6 +339,17 @@ function procesarComandoWebSocket(mensaje, ws) {
             tipo: 'websocket'
         });
 
+        // Reenviar JOIN al servidor Java UDP
+        const comandoUDP = `JOIN|${usuario}|${sala}`;
+        const buffer = Buffer.from(comandoUDP);
+        udpServer.send(buffer, 0, buffer.length, JAVA_SERVER_PORT, HOST, (err) => {
+            if (err) {
+                console.error(`[ERROR] No se pudo enviar JOIN al servidor Java: ${err.message}`);
+            } else {
+                console.log(`[BRIDGE → JAVA UDP] Enviado: ${comandoUDP}`);
+            }
+        });
+
         // Enviar confirmación de unión
         ws.send(JSON.stringify({
             tipo: 'UNIDO_SALA',
@@ -360,37 +361,42 @@ function procesarComandoWebSocket(mensaje, ws) {
         // Notificar a otros en la sala
         notificarAbandonoSala(sala);
 
-    } else if (tipo === 'SEND') {
-        // formato: SEND|fromUser|sala|message...
-        const usuario = partes[1] || mensaje.usuario || info.usuario;
-        const sala = partes[2] || info.sala || mensaje.sala;
-        const contenido = partes.slice(3).join('|');
-
-        if (sala) {
-            salaManager.agregarMensaje(sala, usuario, contenido);
-            broadcastASala(sala, {
-                tipo: 'NUEVO_MENSAJE',
-                usuario: usuario,
-                sala: sala,
-                contenido: contenido,
-                timestamp: new Date().toISOString(),
-                privado: false
-            });
+    } else if (tipo === 'PRIVATE' || (mensaje.destinatario && (mensaje.tipo === 'texto' || mensaje.tipo === 'emoji' || mensaje.tipo === 'sticker' || mensaje.tipo === 'audio'))) {
+        // IMPORTANTE: Esta condición debe ir ANTES de SEND para que los mensajes privados no sean interpretados como públicos
+        // formato: PRIVATE|fromUser|toUser|message... O mensaje directo para sticker/audio
+        const tipoMensaje = mensaje.tipo || 'texto';
+        let fromUser, toUser, contenido;
+        
+        // Si tiene prefijo PRIVATE| (texto/emoji), parsearlo
+        if (tipo === 'PRIVATE' && partes.length >= 4) {
+            fromUser = partes[1];
+            toUser = partes[2];
+            contenido = partes.slice(3).join('|');
+        } else {
+            // Mensaje directo (sticker/audio) - usar campos del objeto
+            fromUser = mensaje.usuario || info.usuario;
+            toUser = mensaje.destinatario;
+            contenido = mensaje.contenido;
         }
 
-    } else if (tipo === 'LEAVE') {
-        if (info.sala && info.usuario) {
-            salaManager.abandonarSala(info.sala, info.usuario);
-            notificarAbandonoSala(info.sala);
-            info.usuario = null;
-            info.sala = null;
-        }
+        console.log(`[PRIVATE] De: ${fromUser} -> A: ${toUser}, Tipo: ${tipoMensaje}`);
 
-    } else if (tipo === 'PRIVATE') {
-        // formato: PRIVATE|fromUser|toUser|message...
-        const fromUser = partes[1] || mensaje.usuario || info.usuario;
-        const toUser = partes[2] || mensaje.destinatario;
-        const contenido = partes.slice(3).join('|');
+        // Reenviar PRIVATE al servidor Java UDP
+        const comandoUDP = `PRIVATE|${fromUser}|${toUser}|${contenido}`;
+        const buffer = Buffer.from(comandoUDP);
+        udpServer.send(buffer, 0, buffer.length, JAVA_SERVER_PORT, HOST, (err) => {
+            if (err) {
+                console.error(`[ERROR] No se pudo enviar PRIVATE al servidor Java: ${err.message}`);
+            } else {
+                console.log(`[BRIDGE → JAVA UDP] Enviado mensaje privado ${tipoMensaje}: ${comandoUDP.substring(0, 100)}...`);
+            }
+        });
+
+        // Determinar tipoMensaje en formato backend
+        let tipoBackend = 'PRIVADO';
+        if (tipoMensaje === 'emoji') tipoBackend = 'EMOJI';
+        else if (tipoMensaje === 'sticker') tipoBackend = 'STICKER';
+        else if (tipoMensaje === 'audio') tipoBackend = 'AUDIO';
 
         // enviar a destinatario via WebSocket si existe
         wsClients.forEach((infoDest, wsDest) => {
@@ -402,7 +408,8 @@ function procesarComandoWebSocket(mensaje, ws) {
                     contenido: contenido,
                     timestamp: new Date().toISOString(),
                     privado: true,
-                    destinatario: toUser
+                    destinatario: toUser,
+                    tipoMensaje: tipoBackend
                 }));
             }
         });
@@ -416,7 +423,8 @@ function procesarComandoWebSocket(mensaje, ws) {
                 contenido: contenido,
                 timestamp: new Date().toISOString(),
                 privado: true,
-                destinatario: toUser
+                destinatario: toUser,
+                tipoMensaje: tipoBackend
             }));
         }
 
@@ -460,6 +468,76 @@ function procesarComandoWebSocket(mensaje, ws) {
                 }
             }
         });
+
+    } else if (tipo === 'SEND' || mensaje.tipo === 'texto' || mensaje.tipo === 'emoji' || mensaje.tipo === 'sticker' || mensaje.tipo === 'audio') {
+        // formato: SEND|fromUser|sala|message... O mensaje directo para sticker/audio
+        const tipoMensaje = mensaje.tipo || 'texto';
+        let usuario, sala, contenido;
+        
+        // Si tiene prefijo SEND| (texto/emoji), parsearlo
+        if (tipo === 'SEND' && partes.length >= 4) {
+            usuario = partes[1];
+            sala = partes[2];
+            contenido = partes.slice(3).join('|');
+        } else {
+            // Mensaje directo (sticker/audio) - usar campos del objeto
+            usuario = mensaje.usuario || info.usuario;
+            sala = mensaje.sala || info.sala;
+            contenido = mensaje.contenido;
+        }
+
+        if (sala) {
+            salaManager.agregarMensaje(sala, usuario, contenido);
+            
+            // Reenviar al servidor Java UDP
+            const comandoUDP = `SEND|${usuario}|${sala}|${contenido}`;
+            const buffer = Buffer.from(comandoUDP);
+            udpServer.send(buffer, 0, buffer.length, JAVA_SERVER_PORT, HOST, (err) => {
+                if (err) {
+                    console.error(`[ERROR] No se pudo enviar al servidor Java: ${err.message}`);
+                } else {
+                    console.log(`[BRIDGE → JAVA UDP] Enviado ${tipoMensaje}: ${comandoUDP.substring(0, 100)}...`);
+                }
+            });
+            
+            // Determinar tipoMensaje en formato backend
+            let tipoBackend = 'TEXTO';
+            if (tipoMensaje === 'emoji') tipoBackend = 'EMOJI';
+            else if (tipoMensaje === 'sticker') tipoBackend = 'STICKER';
+            else if (tipoMensaje === 'audio') tipoBackend = 'AUDIO';
+            
+            broadcastASala(sala, {
+                tipo: 'NUEVO_MENSAJE',
+                usuario: usuario,
+                sala: sala,
+                contenido: contenido,
+                timestamp: new Date().toISOString(),
+                privado: false,
+                tipoMensaje: tipoBackend
+            });
+        }
+
+    } else if (tipo === 'LEAVE') {
+        if (info.sala && info.usuario) {
+            const sala = info.sala;
+            const usuario = info.usuario;
+            
+            // Reenviar LEAVE al servidor Java UDP
+            const comandoUDP = `LEAVE|${usuario}|${sala}`;
+            const buffer = Buffer.from(comandoUDP);
+            udpServer.send(buffer, 0, buffer.length, JAVA_SERVER_PORT, HOST, (err) => {
+                if (err) {
+                    console.error(`[ERROR] No se pudo enviar LEAVE al servidor Java: ${err.message}`);
+                } else {
+                    console.log(`[BRIDGE → JAVA UDP] Enviado: ${comandoUDP}`);
+                }
+            });
+            
+            salaManager.abandonarSala(info.sala, info.usuario);
+            notificarAbandonoSala(info.sala);
+            info.usuario = null;
+            info.sala = null;
+        }
     }
 }
 
@@ -573,12 +651,13 @@ server.listen(WS_PORT, HOST, () => {
 ╔════════════════════════════════════════╗
 ║        PUENTE UDP ↔ WebSocket          ║
 ║                                        ║
-║  Cliente Java (UDP:5000)               ║
-║          ↓                             ║
-║  Node.js Puente (UDP:5000 + WS:8080)  ║
+║  ChatServer.java (UDP:5000)            ║
+║  Node.js Bridge (UDP:5001 + WS:8080)  ║
 ║          ↓                             ║
 ║  Frontend Angular (ws://localhost)     ║
 ║                                        ║
+║  NOTA: Clientes Java UDP conectar a   ║
+║        puerto 5001 para integración    ║
 ╚════════════════════════════════════════╝
     `);
 });

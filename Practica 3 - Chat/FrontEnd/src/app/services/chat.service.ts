@@ -76,9 +76,11 @@ export class ChatService {
 
     // Procesar mensaje nuevo (público o privado)
     if (data.tipo === 'NUEVO_MENSAJE') {
-      // Defensive: if contenido still contains command prefixes like "SEND|user|sala|msg"
       let contenido = data.contenido || '';
-      if (typeof contenido === 'string') {
+      
+      const esAudioBase64 = typeof contenido === 'string' && contenido.startsWith('data:audio');
+      
+      if (typeof contenido === 'string' && !esAudioBase64) {
         const partes = contenido.split('|');
         if (partes.length >= 4 && (partes[0] === 'SEND' || partes[0] === 'PRIVATE')) {
           contenido = partes.slice(3).join('|');
@@ -89,36 +91,52 @@ export class ChatService {
 
       // Detectar si el contenido es solo un emoji (o una secuencia de emojis)
       let esSoloEmoji = false;
-      try {
-        // Unicode property for pictographic (covers most emoji glyphs)
-        esSoloEmoji = typeof contenido === 'string' && /^\p{Extended_Pictographic}+(\uFE0F|\u200D\p{Extended_Pictographic})*$/u.test(contenido.trim());
-      } catch (e) {
-        // Fallback simple heuristic: contenido corto and contains non-word characters (emoji may be non-word)
-        esSoloEmoji = typeof contenido === 'string' && contenido.trim().length <= 4 && /[^\w\s]/.test(contenido);
+      if (!esAudioBase64) {
+        try {
+          // Unicode property for pictographic (covers most emoji glyphs)
+          esSoloEmoji = typeof contenido === 'string' && /^\p{Extended_Pictographic}+(\uFE0F|\u200D\p{Extended_Pictographic})*$/u.test(contenido.trim());
+        } catch (e) {
+          // Fallback simple heuristic: contenido corto and contains non-word characters (emoji may be non-word)
+          esSoloEmoji = typeof contenido === 'string' && contenido.trim().length <= 4 && /[^\w\s]/.test(contenido);
+        }
       }
 
-      const tipoMensaje = esSoloEmoji ? 'emoji' : (isPrivado ? 'privado' : 'texto');
+      // Determinar tipo de mensaje basándose en múltiples factores
+      let tipoMensaje: Message['tipo'];
+      if (data.tipoMensaje === 'AUDIO' || esAudioBase64) {
+        tipoMensaje = 'audio';
+      } else if (data.tipoMensaje === 'STICKER') {
+        tipoMensaje = 'sticker';
+      } else if (data.tipoMensaje === 'EMOJI' || esSoloEmoji) {
+        tipoMensaje = 'emoji';
+      } else if (isPrivado || data.tipoMensaje === 'PRIVADO' || data.destinatario) {
+        tipoMensaje = 'privado';
+      } else {
+        tipoMensaje = 'texto';
+      }
 
       const mensaje: Message = {
         id: Math.random().toString(),
         usuario: data.usuario,
         sala: data.sala || null,
         contenido: contenido,
-        tipo: tipoMensaje as Message['tipo'],
+        tipo: tipoMensaje,
         timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
-        destinatario: data.destinatario
+        destinatario: data.destinatario,
+        audioData: tipoMensaje === 'audio' ? contenido : undefined,
+        stickerUrl: tipoMensaje === 'sticker' ? contenido : undefined
       } as Message;
 
       const usuarioActual = this.usuarioActual()?.nombre;
-
-      // Decidir si agregamos el mensaje a la lista visible
       const esSalaActual = mensaje.sala && mensaje.sala === this.salaActual()?.nombre;
-      const esPrivadoParaMi = mensaje.tipo === 'privado' && (mensaje.destinatario === usuarioActual || mensaje.usuario === usuarioActual);
+      
+      const esPrivadoParaMi = mensaje.destinatario && 
+                              (mensaje.destinatario === usuarioActual || mensaje.usuario === usuarioActual);
 
       if (esSalaActual || esPrivadoParaMi) {
         const msgs = this.mensajes();
         this.mensajes.set([...msgs, mensaje]);
-        console.log(`💬 Mensaje de ${mensaje.usuario}: ${mensaje.contenido}`);
+        console.log(`💬 Mensaje de ${mensaje.usuario}: ${mensaje.contenido.substring(0, 50)} (Tipo: ${mensaje.tipo}, Privado: ${!!mensaje.destinatario})`);
       }
       return;
     }
@@ -128,7 +146,6 @@ export class ChatService {
     const usuario = this.usuarioActual();
     if (!usuario || !this.conectado || !this.ws) return;
 
-    // Crear el comando en formato esperado por el servidor
     const comando = {
       usuario: usuario.nombre,
       sala: nombreSala,
@@ -150,32 +167,74 @@ export class ChatService {
     const sala = this.salaActual();
     if (!usuario || !sala || !this.conectado || !this.ws) return;
 
-    // Crear el comando en formato esperado por el servidor
+    let contenidoFinal = contenido;
+    if (tipo === 'texto' || tipo === 'emoji') {
+      contenidoFinal = `SEND|${usuario.nombre}|${sala.nombre}|${contenido}`;
+    }
+
     const comando = {
       usuario: usuario.nombre,
       sala: sala.nombre,
-      contenido: `SEND|${usuario.nombre}|${sala.nombre}|${contenido}`,
+      contenido: contenidoFinal,
       tipo: tipo,
       timestamp: new Date()
     };
 
-    console.log('📤 Enviando mensaje a', sala.nombre, ':', contenido);
+    console.log('📤 Enviando mensaje a', sala.nombre, '- Tipo:', tipo);
     this.ws.send(JSON.stringify(comando));
   }
 
-  enviarMensajePrivado(contenido: string, destinatario: string): void {
+  enviarAudio(audioBase64: string): void {
+    const usuario = this.usuarioActual();
+    const sala = this.salaActual();
+    if (!usuario || !sala || !this.conectado || !this.ws) return;
+
+    const comando = {
+      usuario: usuario.nombre,
+      sala: sala.nombre,
+      contenido: audioBase64,
+      tipo: 'audio',
+      timestamp: new Date()
+    };
+
+    console.log('📤 Enviando audio a', sala.nombre);
+    this.ws.send(JSON.stringify(comando));
+  }
+
+  enviarAudioPrivado(audioBase64: string, destinatario: string): void {
     const usuario = this.usuarioActual();
     if (!usuario || !this.conectado || !this.ws) return;
 
     const comando = {
       usuario: usuario.nombre,
       destinatario: destinatario,
-      contenido: `PRIVATE|${usuario.nombre}|${destinatario}|${contenido}`,
-      tipo: 'privado',
+      contenido: audioBase64,
+      tipo: 'audio',
       timestamp: new Date()
     };
 
-    console.log('📤 Enviando mensaje privado a', destinatario);
+    console.log('📤 Enviando audio privado a', destinatario);
+    this.ws.send(JSON.stringify(comando));
+  }
+
+  enviarMensajePrivado(contenido: string, destinatario: string, tipo: 'texto' | 'emoji' | 'sticker' = 'texto'): void {
+    const usuario = this.usuarioActual();
+    if (!usuario || !this.conectado || !this.ws) return;
+
+    let contenidoFinal = contenido;
+    if (tipo === 'texto' || tipo === 'emoji') {
+      contenidoFinal = `PRIVATE|${usuario.nombre}|${destinatario}|${contenido}`;
+    }
+
+    const comando = {
+      usuario: usuario.nombre,
+      destinatario: destinatario,
+      contenido: contenidoFinal,
+      tipo: tipo,
+      timestamp: new Date()
+    };
+
+    console.log('📤 [PRIVADO] Enviando a', destinatario, '- Tipo:', tipo, '- Comando:', comando);
     this.ws.send(JSON.stringify(comando));
   }
 

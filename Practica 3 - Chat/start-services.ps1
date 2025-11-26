@@ -20,15 +20,15 @@ Write-Host "
 
 # Terminal 1: Puente Node.js
 Write-Host "📡 Abriendo Terminal 1: Puente Node.js..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; Write-Host 'Terminal 1: Puente Node.js' -ForegroundColor Green; Write-Host 'Ejecutando: node server.js' -ForegroundColor Yellow; node server.js"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot'; Write-Host 'Terminal 1: Puente Node.js (Bridge UDP-WebSocket)' -ForegroundColor Green; Write-Host 'Ejecutando: node server.js' -ForegroundColor Yellow; node server.js"
 
 Start-Sleep -Seconds 2
 
 # Terminal 2: Servidor UDP Java
 Write-Host "☕ Abriendo Terminal 2: Servidor UDP Java..." -ForegroundColor Cyan
-Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot\Chat Grupal\src\main\java'; Write-Host 'Terminal 2: Servidor UDP Java' -ForegroundColor Green; Write-Host 'Ejecutando: java ChatGrupal.demo.ChatServer' -ForegroundColor Yellow; java ChatGrupal.demo.ChatServer"
+Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot\Chat Grupal'; Write-Host 'Terminal 2: Servidor UDP Java (ChatServer)' -ForegroundColor Green; Write-Host 'Ejecutando: mvn exec:java' -ForegroundColor Yellow; mvn exec:java"
 
-Start-Sleep -Seconds 2
+Start-Sleep -Seconds 3
 
 # Terminal 3: Frontend Angular
 Write-Host "🅰️  Abriendo Terminal 3: Frontend Angular..." -ForegroundColor Cyan
@@ -37,17 +37,20 @@ Start-Process powershell -ArgumentList "-NoExit", "-Command", "cd '$projectRoot\
 Write-Host "
 ✅ Servicios iniciados en paralelo:
 
-📡 Terminal 1: Puente Node.js
-   └─ Puerto UDP: 5000
+📡 Terminal 1: Puente Node.js (Bridge)
+   └─ Puerto UDP: 5001
    └─ Puerto WebSocket: 8080
+   └─ Traduce UDP ↔ WebSocket
 
-☕ Terminal 2: Servidor UDP Java
-   └─ Puerto: 5000
+☕ Terminal 2: Servidor UDP Java (ChatServer)
+   └─ Puerto UDP: 5000
+   └─ Usa hilos para manejar clientes
 
 🅰️  Terminal 3: Frontend Angular
    └─ URL: http://localhost:4200
+   └─ Conecta a bridge via WebSocket
 
-⏳ Espera ~30 segundos a que todos estén listos...
+⏳ Espera ~20-30 segundos a que todos estén listos...
 " -ForegroundColor Green
 
 # Esperar a que los servicios estén listos
@@ -63,14 +66,27 @@ Write-Host "
 
 ✅ SISTEMA COMPLETAMENTE DESPLEGADO
 
-Servicios activos:
-  ✅ Puente UDP ↔ WebSocket: http://localhost:8080
-  ✅ Frontend Angular: http://localhost:4200
-  ✅ Servidor UDP Java: Escuchando en puerto 5000
+Arquitectura (cumple requisitos de UDP e hilos):
+  
+  [Frontend Angular] ←WebSocket→ [Bridge Node.js] ←UDP→ [ChatServer Java UDP]
+       :4200                        :8080 (WS)              :5000 (UDP)
+                                    :5001 (UDP)              + hilos
 
-Para crear un cliente UDP de prueba, abre otra terminal y ejecuta:
-  cd 'Chat Grupal\src\main\java'
-  java ChatGrupal.demo.ChatClient
+Servicios activos:
+  ✅ ChatServer Java UDP (puerto 5000) - VÍA PRINCIPAL
+  ✅ Bridge Node.js (UDP:5001 + WS:8080) - Traductor
+  ✅ Frontend Angular (http://localhost:4200)
+
+FLUJO DE COMUNICACIÓN:
+  1. Frontend → WebSocket (8080) → Bridge
+  2. Bridge → UDP (5000) → ChatServer Java
+  3. ChatServer procesa con HILOS
+  4. Respuesta: ChatServer → UDP → Bridge → WebSocket → Frontend
+
+Funcionalidades:
+  ✅ Chat grupal (UDP + hilos)
+  ✅ Mensajes privados con emojis
+  ✅ Lista de usuarios activos
 
 ═════════════════════════════════════════════════════════════════
 " -ForegroundColor Green

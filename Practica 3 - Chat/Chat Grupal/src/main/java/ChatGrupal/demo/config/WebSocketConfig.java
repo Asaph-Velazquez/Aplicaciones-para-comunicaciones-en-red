@@ -12,15 +12,12 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void configureMessageBroker(MessageBrokerRegistry config) {
-        // Habilita un broker de mensajes simple en memoria
         config.enableSimpleBroker("/topic", "/queue");
-        // Prefijo para mensajes destinados al servidor
         config.setApplicationDestinationPrefixes("/app");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // Endpoint WebSocket con SockJS fallback
         registry.addEndpoint("/ws-chat")
                 .setAllowedOriginPatterns("*")
                 .withSockJS();

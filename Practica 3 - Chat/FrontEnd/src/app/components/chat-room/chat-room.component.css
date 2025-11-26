@@ -455,6 +455,28 @@
 .mensaje-emoji {
   font-size: 2.5rem;
   text-align: center;
+  padding: 15px 20px !important;
+}
+
+/* Emojis en mensajes privados deben verse igual de grandes */
+.mensaje-privado.mensaje-emoji {
+  font-size: 2.5rem;
+  text-align: center;
+}
+
+/* El badge de privado en mensajes de emoji */
+.mensaje-privado .badge-privado {
+  background: rgba(251, 191, 36, 0.3);
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--warning-color);
+}
+
+/* Mejora visual para mensajes privados con emoji */
+.mensaje-privado .mensaje-contenido {
+  padding: 5px 0;
 }
 
 /* Input Area */
@@ -735,5 +757,299 @@
   .btn-enviar {
     padding: 9px 16px;
     font-size: 0.85rem;
+  }
+}
+
+/* Sticker Picker Styles */
+.sticker-picker {
+  position: absolute;
+  bottom: 70px;
+  left: 80px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+  box-shadow: 0 4px 12px var(--shadow-medium);
+  z-index: 100;
+  max-height: 250px;
+  overflow-y: auto;
+}
+
+.sticker-btn {
+  width: 50px;
+  height: 50px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  border-radius: 8px;
+  font-size: 1.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sticker-btn:hover {
+  transform: scale(1.15);
+  background: var(--bg-hover);
+  box-shadow: 0 2px 8px var(--shadow-light);
+}
+
+.btn-sticker {
+  width: 45px;
+  height: 45px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-sticker:hover {
+  background: var(--bg-hover);
+  transform: scale(1.05);
+}
+
+.btn-audio {
+  width: 45px;
+  height: 45px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  border-radius: 50%;
+  font-size: 1.3rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-audio:hover {
+  background: var(--error-color);
+  color: white;
+  transform: scale(1.05);
+}
+
+/* Sticker Message Styles */
+.mensaje-sticker .mensaje-contenido {
+  font-size: 3rem;
+  padding: 10px;
+  text-align: center;
+}
+
+.sticker-mensaje {
+  font-size: 3rem;
+  line-height: 1;
+}
+
+/* Audio Recording Panel */
+.audio-recording-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px 20px;
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  border-radius: 12px;
+  gap: 20px;
+}
+
+.recording-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: white;
+  font-weight: 500;
+}
+
+.recording-dot {
+  animation: pulse 1.5s infinite;
+  font-size: 1.2rem;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.3;
+  }
+}
+
+.recording-time {
+  font-family: 'Courier New', monospace;
+  font-size: 1.1rem;
+  font-weight: bold;
+  min-width: 50px;
+}
+
+.recording-text {
+  font-size: 1rem;
+}
+
+.recording-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.btn-cancel-recording,
+.btn-stop-recording {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.btn-cancel-recording {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.btn-cancel-recording:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.btn-stop-recording {
+  background: white;
+  color: #ff6b6b;
+}
+
+.btn-stop-recording:hover {
+  background: #f0f0f0;
+  transform: scale(1.05);
+}
+
+/* Audio Message Styles */
+.mensaje-audio {
+  min-width: 280px;
+}
+
+.audio-mensaje {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px;
+}
+
+.audio-icon {
+  font-size: 1.5rem;
+}
+
+.audio-mensaje audio {
+  flex: 1;
+  height: 40px;
+  border-radius: 8px;
+}
+
+audio::-webkit-media-controls-panel {
+  background: var(--bg-tertiary);
+}
+
+audio::-webkit-media-controls-play-button {
+  background-color: var(--accent-color);
+  border-radius: 50%;
+}
+
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+  color: var(--text-primary);
+}
+
+/* Mobile adjustments for new features */
+@media (max-width: 768px) {
+  .sticker-picker {
+    grid-template-columns: repeat(4, 1fr);
+    bottom: 60px;
+    left: 50px;
+  }
+
+  .sticker-btn {
+    width: 45px;
+    height: 45px;
+    font-size: 1.5rem;
+  }
+
+  .btn-sticker,
+  .btn-audio {
+    width: 38px;
+    height: 38px;
+    font-size: 1.1rem;
+  }
+
+  .audio-recording-panel {
+    flex-direction: column;
+    padding: 12px 15px;
+    gap: 12px;
+  }
+
+  .recording-info {
+    gap: 8px;
+  }
+
+  .recording-time {
+    font-size: 1rem;
+  }
+
+  .recording-text {
+    font-size: 0.9rem;
+  }
+
+  .recording-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .btn-cancel-recording,
+  .btn-stop-recording {
+    flex: 1;
+    padding: 8px 15px;
+    font-size: 0.85rem;
+  }
+
+  .mensaje-audio {
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sticker-picker {
+    grid-template-columns: repeat(3, 1fr);
+    bottom: 55px;
+    left: 40px;
+  }
+
+  .sticker-btn {
+    width: 40px;
+    height: 40px;
+    font-size: 1.3rem;
+  }
+
+  .btn-sticker,
+  .btn-audio {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+  }
+
+  .mensaje-sticker .mensaje-contenido {
+    font-size: 2.5rem;
+  }
+
+  .mensaje-audio {
+    min-width: 200px;
+  }
+
+  .audio-mensaje audio {
+    height: 35px;
   }
 }

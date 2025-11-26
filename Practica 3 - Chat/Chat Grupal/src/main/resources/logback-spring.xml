@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- Importar perfiles de Spring Boot -->
     <springProperty name="LOG_FILE" source="logging.file.name" defaultValue="logs/chat-aplicacion.log"/>
     
-    <!-- Appender para consola con colores -->
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>
@@ -17,7 +15,6 @@
         </encoder>
     </appender>
 
-    <!-- Appender para archivo de logs -->
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_FILE}</file>
         <encoder>
@@ -60,27 +57,23 @@
         </filter>
     </appender>
 
-    <!-- Logger específico para el controlador de chat -->
     <logger name="ChatGrupal.demo.controller" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="CHAT_OPERATIONS"/>
     </logger>
 
-    <!-- Logger específico para el servicio de sala -->
     <logger name="ChatGrupal.demo.service" level="INFO" additivity="false">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
         <appender-ref ref="CHAT_OPERATIONS"/>
     </logger>
 
-    <!-- Logger raíz -->
     <root level="INFO">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="FILE"/>
     </root>
 
-    <!-- Perfiles de Spring -->
     <springProfile name="dev">
         <root level="DEBUG">
             <appender-ref ref="CONSOLE"/>

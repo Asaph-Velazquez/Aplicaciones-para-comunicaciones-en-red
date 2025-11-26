@@ -5,7 +5,9 @@ export interface Message {
   contenido: string;
   tipo: 'texto' | 'emoji' | 'sticker' | 'audio' | 'privado';
   timestamp: Date;
-  destinatario?: string; // Para mensajes privados
+  destinatario?: string;
+  audioData?: string; 
+  stickerUrl?: string; 
 }
 
 export interface Usuario {

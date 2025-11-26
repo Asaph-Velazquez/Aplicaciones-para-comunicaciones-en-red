@@ -13,7 +13,6 @@
   </header>
 
   <div class="chat-content">
-    <!-- Botón para minimizar/maximizar sidebar (siempre visible) -->
     @if (!mostrarUnirse() && chatService.salaActual()) {
       <button 
         class="btn-sidebar-toggle" 
@@ -53,7 +52,6 @@
 
     <!-- Área principal de chat -->
     <main class="main-chat">
-      <!-- Modal para unirse a sala -->
       @if (mostrarUnirse()) {
         <div class="unirse-sala-modal">
           <div class="unirse-card">
@@ -107,16 +105,32 @@
                   class="mensaje"
                   [class.mensaje-propio]="esMensajePropio(mensaje)"
                   [class.mensaje-privado]="esMensajePrivado(mensaje)"
+                  [class.mensaje-emoji]="mensaje.tipo === 'emoji'"
+                  [class.mensaje-sticker]="mensaje.tipo === 'sticker'"
+                  [class.mensaje-audio]="mensaje.tipo === 'audio'"
                 >
                   <div class="mensaje-header">
                     <span class="mensaje-usuario">{{ mensaje.usuario }}</span>
-                    @if (mensaje.tipo === 'privado') {
+                    @if (esMensajePrivado(mensaje)) {
                       <span class="badge-privado">🔒 Privado</span>
                     }
                     <span class="mensaje-hora">{{ formatearHora(mensaje.timestamp) }}</span>
                   </div>
-                  <div class="mensaje-contenido" [class.mensaje-emoji]="mensaje.tipo === 'emoji'">
-                    {{ mensaje.contenido }}
+                  <div class="mensaje-contenido">
+                    @if (mensaje.tipo === 'audio') {
+                      <div class="audio-mensaje">
+                        <span class="audio-icon">🎤</span>
+                        <audio controls [src]="mensaje.audioData">
+                          Tu navegador no soporta el elemento de audio.
+                        </audio>
+                      </div>
+                    } @else if (mensaje.tipo === 'sticker') {
+                      <div class="sticker-mensaje">
+                        {{ mensaje.contenido }}
+                      </div>
+                    } @else {
+                      {{ mensaje.contenido }}
+                    }
                   </div>
                 </div>
               }
@@ -125,43 +139,100 @@
 
           <!-- Input de mensaje -->
           <div class="input-area">
-            @if (mostrarEmojis()) {
-              <div class="emoji-picker">
-                @for (emoji of emojis; track emoji) {
+            @if (grabandoAudio()) {
+              <!-- Panel de grabación de audio -->
+              <div class="audio-recording-panel">
+                <div class="recording-info">
+                  <span class="recording-dot">🔴</span>
+                  <span class="recording-time">{{ formatearTiempoGrabacion() }}</span>
+                  <span class="recording-text">Grabando audio...</span>
+                </div>
+                <div class="recording-actions">
                   <button 
-                    class="emoji-btn"
-                    (click)="enviarEmoji(emoji)"
+                    type="button" 
+                    class="btn-cancel-recording"
+                    (click)="cancelarGrabacion()"
                   >
-                    {{ emoji }}
+                    ❌ Cancelar
                   </button>
-                }
+                  <button 
+                    type="button" 
+                    class="btn-stop-recording"
+                    (click)="detenerGrabacion()"
+                  >
+                    ⏹️ Enviar
+                  </button>
+                </div>
               </div>
+            } @else {
+              @if (mostrarEmojis()) {
+                <div class="emoji-picker">
+                  @for (emoji of emojis; track emoji) {
+                    <button 
+                      class="emoji-btn"
+                      (click)="enviarEmoji(emoji)"
+                    >
+                      {{ emoji }}
+                    </button>
+                  }
+                </div>
+              }
+              
+              @if (mostrarStickers()) {
+                <div class="sticker-picker">
+                  @for (sticker of stickers; track sticker) {
+                    <button 
+                      class="sticker-btn"
+                      (click)="enviarSticker(sticker)"
+                    >
+                      {{ sticker }}
+                    </button>
+                  }
+                </div>
+              }
+              
+              <form (ngSubmit)="enviarMensaje()" class="mensaje-form">
+                <button 
+                  type="button" 
+                  class="btn-emoji"
+                  (click)="toggleEmojis()"
+                  title="Emojis"
+                >
+                  😀
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-sticker"
+                  (click)="toggleStickers()"
+                  title="Stickers"
+                >
+                  🎨
+                </button>
+                <button 
+                  type="button" 
+                  class="btn-audio"
+                  (click)="iniciarGrabacion()"
+                  title="Grabar audio"
+                >
+                  🎤
+                </button>
+                <input
+                  type="text"
+                  [(ngModel)]="nuevoMensaje"
+                  name="mensaje"
+                  placeholder="Escribe un mensaje..."
+                  class="input-mensaje"
+                  [attr.maxlength]="500"
+                />
+                <button 
+                  type="submit" 
+                  class="btn-enviar"
+                  [disabled]="!nuevoMensaje()"
+                >
+                  📤 Enviar
+                </button>
+              </form>
             }
-            
-            <form (ngSubmit)="enviarMensaje()" class="mensaje-form">
-              <button 
-                type="button" 
-                class="btn-emoji"
-                (click)="toggleEmojis()"
-              >
-                😀
-              </button>
-              <input
-                type="text"
-                [(ngModel)]="nuevoMensaje"
-                name="mensaje"
-                placeholder="Escribe un mensaje..."
-                class="input-mensaje"
-                [attr.maxlength]="500"
-              />
-              <button 
-                type="submit" 
-                class="btn-enviar"
-                [disabled]="!nuevoMensaje()"
-              >
-                📤 Enviar
-              </button>
-            </form>
           </div>
         </div>
       }

@@ -1,9 +1,3 @@
-/**
- * Polyfills necesarios para SockJS en navegadores modernos
- * SockJS espera variables globales de Node.js que no existen en navegadores
- */
-
-// Definir 'global' como referencia a globalThis
 (globalThis as any).global = globalThis;
 
 // Definir 'process' con las propiedades mínimas que SockJS necesita
