@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servidor HTTP - Explorador de Archivos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🌐 Servidor HTTP Simple</h1>
+            <p class="subtitle">Explorador de archivos y pruebas de métodos HTTP</p>
+        </header>
+
+        <main>
+            <!-- Panel de información del servidor -->
+            <section class="info-panel">
+                <h2>📊 Estado del Servidor</h2>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <span class="label">Puerto:</span>
+                        <span class="value" id="serverPort">8080</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Protocolo:</span>
+                        <span class="value">HTTP/1.1</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">Estado:</span>
+                        <span class="value status-active">✓ Activo</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Directorio de Uploads -->
+            <section class="file-browser upload-section">
+                <h2>📤 Archivos de Directorio</h2>
+                <div class="upload-info">
+                    <p><strong>💡 Ubicación:</strong> <code>www/uploads/</code></p>
+                    <p>Todos tus archivos de directorio. El servidor los detectará automáticamente.</p>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h3 class="section-subtitle" style="margin: 0;">📋 Archivos Disponibles</h3>
+                    <button onclick="refreshFiles()" class="refresh-btn">🔄 Actualizar</button>
+                </div>
+                
+                <div class="file-list" id="uploadsList">
+                    <p style="color: #d4a574; text-align: center; padding: 20px;">Cargando archivos...</p>
+                </div>
+            </section>
+
+            <!-- Panel de pruebas HTTP -->
+            <section class="http-tester">
+                <h2>🧪 Probar Métodos HTTP</h2>
+                <div class="method-buttons">
+                    <button class="method-btn get" onclick="testMethod('GET')">GET</button>
+                    <button class="method-btn post" onclick="testMethod('POST')">POST</button>
+                    <button class="method-btn put" onclick="testMethod('PUT')">PUT</button>
+                    <button class="method-btn delete" onclick="testMethod('DELETE')">DELETE</button>
+                    <button class="method-btn head" onclick="testMethod('HEAD')">HEAD</button>
+                </div>
+
+                <div class="test-config">
+                    <label for="testResource">Recurso:</label>
+                    <input type="text" id="testResource" value="/uploads/test.json" placeholder="/recurso">
+                    
+                    <label for="testBody">Body (para POST/PUT):</label>
+                    <textarea id="testBody" rows="4" placeholder='{"key": "value"}'></textarea>
+                    
+                    <div class="quick-actions">
+                        <button class="quick-btn quick-post" onclick="testMethod('POST')">📤 Enviar POST</button>
+                        <button class="quick-btn quick-put" onclick="testMethod('PUT')">📝 Enviar PUT</button>
+                    </div>
+                </div>
+
+                <div class="response-panel">
+                    <h3>Respuesta:</h3>
+                    <pre id="responseOutput">Selecciona un método HTTP para probar...</pre>
+                </div>
+            </section>
+
+            <!-- Información sobre tipos MIME -->
+            <section class="mime-info">
+                <h2>📦 Tipos MIME Soportados</h2>
+                <div class="mime-grid">
+                    <div class="mime-item">
+                        <strong>.html/.htm</strong>
+                        <span>text/html</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.txt</strong>
+                        <span>text/plain</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.json</strong>
+                        <span>application/json</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.png</strong>
+                        <span>image/png</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.jpg/.jpeg</strong>
+                        <span>image/jpeg</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.css</strong>
+                        <span>text/css</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.js</strong>
+                        <span>application/javascript</span>
+                    </div>
+                    <div class="mime-item">
+                        <strong>.pdf</strong>
+                        <span>application/pdf</span>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>Servidor HTTP Simple - Java SE con Sockets Puros</p>
+            <p>Proyecto Académico 2025</p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

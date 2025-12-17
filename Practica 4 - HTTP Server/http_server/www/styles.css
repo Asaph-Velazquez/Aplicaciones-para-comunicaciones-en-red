@@ -1,0 +1,455 @@
+/* Reset y estilos base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #1a1410 0%, #2d2419 100%);
+    min-height: 100vh;
+    padding: 20px;
+    color: #f5f5dc;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: #2d2419;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    border: 1px solid #4a3f2f;
+}
+
+/* Header */
+header {
+    background: linear-gradient(135deg, #3d3020 0%, #2d2419 100%);
+    color: #d4a574;
+    padding: 40px;
+    text-align: center;
+    border-bottom: 2px solid #c9963d;
+}
+
+header h1 {
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    font-size: 1.1em;
+    opacity: 0.9;
+}
+
+/* Main content */
+main {
+    padding: 30px;
+}
+
+section {
+    margin-bottom: 40px;
+    padding: 25px;
+    background: #3d3020;
+    border-radius: 8px;
+    border-left: 4px solid #c9963d;
+}
+
+section h2 {
+    color: #d4a574;
+    margin-bottom: 20px;
+    font-size: 1.5em;
+}
+
+/* Panel de información */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.info-item {
+    background: #4a3f2f;
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid #5a4f3f;
+}
+
+.label {
+    font-weight: bold;
+    color: #d4a574;
+}
+
+.value {
+    color: #f5f5dc;
+    font-weight: 600;
+}
+
+.status-active {
+    color: #c9963d;
+}
+
+/* Explorador de archivos */
+.file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.file-item {
+    background: #4a3f2f;
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid #5a4f3f;
+}
+
+.file-item:hover {
+    transform: translateX(5px);
+    box-shadow: 0 4px 8px rgba(201, 150, 61, 0.3);
+    background: #5a4f3f;
+    border-color: #c9963d;
+}
+
+.file-icon {
+    font-size: 1.5em;
+}
+
+.file-name {
+    flex: 1;
+    font-weight: 600;
+    color: #f5f5dc;
+}
+
+.file-type {
+    color: #d4a574;
+    font-size: 0.9em;
+    font-family: 'Courier New', monospace;
+}
+
+/* Panel de pruebas HTTP */
+.method-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.method-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.method-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.method-btn.get {
+    background: #8b7355;
+}
+
+.method-btn.post {
+    background: #c9963d;
+}
+
+.method-btn.put {
+    background: #6b5844;
+}
+
+.method-btn.delete {
+    background: #8b4513;
+}
+
+.method-btn.head {
+    background: #5a4f3f;
+}
+
+.method-btn.trace {
+    background: #a0826d;
+}
+
+.test-config {
+    background: #4a3f2f;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #5a4f3f;
+}
+
+.test-config label {
+    display: block;
+    margin-top: 15px;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #d4a574;
+}
+
+.test-config input,
+.test-config textarea {
+    width: 100%;
+    padding: 10px;
+    border: 2px solid #5a4f3f;
+    border-radius: 4px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.95em;
+    background: #2d2419;
+    color: #f5f5dc;
+}
+
+.test-config input:focus,
+.test-config textarea:focus {
+    outline: none;
+    border-color: #c9963d;
+}
+
+.response-panel {
+    background: #4a3f2f;
+    padding: 20px;
+    border-radius: 6px;
+    border: 1px solid #5a4f3f;
+}
+
+.response-panel h3 {
+    color: #d4a574;
+    margin-bottom: 10px;
+}
+
+#responseOutput {
+    background: #1a1410;
+    color: #c9963d;
+    padding: 15px;
+    border-radius: 4px;
+    overflow-x: auto;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+    min-height: 100px;
+    border: 1px solid #3d3020;
+}
+
+/* Tipos MIME */
+.mime-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.mime-item {
+    background: #4a3f2f;
+    padding: 15px;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    border: 1px solid #5a4f3f;
+}
+
+.mime-item strong {
+    color: #c9963d;
+    font-size: 1.1em;
+}
+
+.mime-item span {
+    color: #d4a574;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9em;
+}
+
+/* Sección de Uploads */
+.upload-section {
+    border-left: 4px solid #c9963d;
+}
+
+.upload-section h2 {
+    color: #c9963d;
+}
+
+.section-subtitle {
+    color: #c9963d;
+    margin: 20px 0 15px 0;
+}
+
+.upload-info {
+    background: #4a3f2f;
+    padding: 15px;
+    border-radius: 6px;
+    margin-bottom: 20px;
+    border: 1px solid #5a4f3f;
+}
+
+.upload-info p {
+    margin: 5px 0;
+}
+
+.upload-info code {
+    background: #2d2419;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #c9963d;
+    font-weight: bold;
+}
+
+.upload-instructions {
+    background: #4a3f2f;
+    padding: 20px;
+    border-radius: 6px;
+    margin-top: 20px;
+    border: 1px solid #5a4f3f;
+}
+
+.upload-instructions h3 {
+    color: #c9963d;
+    margin-bottom: 15px;
+}
+
+.upload-instructions ol {
+    margin-left: 20px;
+}
+
+.upload-instructions li {
+    margin: 10px 0;
+    line-height: 1.6;
+}
+
+.upload-instructions code {
+    background: #2d2419;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    color: #c9963d;
+}
+
+.tip-box {
+    background: #4a3920;
+    padding: 15px;
+    border-radius: 6px;
+    margin-top: 15px;
+    border-left: 4px solid #c9963d;
+    border: 1px solid #5a4930;
+}
+
+.tip-box strong {
+    color: #d4a574;
+}
+
+.tip-box code {
+    background: #2d2419;
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: #c9963d;
+    font-weight: bold;
+}
+
+/* Botón de actualizar */
+.refresh-btn {
+    padding: 8px 16px;
+    background: #c9963d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.refresh-btn:hover {
+    background: #d4a574;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(201, 150, 61, 0.3);
+}
+
+.refresh-btn:active {
+    transform: translateY(0);
+}
+
+/* Botones de acción rápida */
+.quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.quick-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    color: white;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.quick-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+.quick-btn:active {
+    transform: translateY(0);
+}
+
+.quick-post {
+    background: linear-gradient(135deg, #c9963d 0%, #d4a574 100%);
+}
+
+.quick-post:hover {
+    background: linear-gradient(135deg, #d4a574 0%, #c9963d 100%);
+}
+
+.quick-put {
+    background: linear-gradient(135deg, #6b5844 0%, #8b7355 100%);
+}
+
+.quick-put:hover {
+    background: linear-gradient(135deg, #8b7355 0%, #6b5844 100%);
+}
+
+/* Footer */
+footer {
+    background: #1a1410;
+    color: #d4a574;
+    text-align: center;
+    padding: 20px;
+    border-top: 2px solid #c9963d;
+}
+
+footer p {
+    margin: 5px 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    header h1 {
+        font-size: 1.8em;
+    }
+
+    .method-buttons {
+        flex-direction: column;
+    }
+
+    .method-btn {
+        width: 100%;
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "mensaje": "Este es un archivo de ejemplo en el directorio uploads/",
+  "instrucciones": "Coloca tus propios archivos aquí para probarlos",
+  "acceso": "http://localhost:8080/uploads/ejemplo.json",
+  "tipos_soportados": [
+    "HTML",
+    "CSS",
+    "JavaScript",
+    "JSON",
+    "Imágenes (PNG, JPG, GIF)",
+    "PDF",
+    "TXT",
+    "XML"
+  ],
+  "ejemplo_uso": {
+    "paso_1": "Copia tu archivo a www/uploads/",
+    "paso_2": "Accede a http://localhost:8080/uploads/tu-archivo.ext",
+    "paso_3": "El servidor lo servirá automáticamente con el tipo MIME correcto"
+  }
+}

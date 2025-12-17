@@ -1,0 +1,12 @@
+{
+  "id": 1,
+  "nombre": "Prueba HTTP",
+  "descripcion": "Archivo JSON para probar métodos POST, PUT y DELETE",
+  "datos": {
+    "servidor": "HTTP Simple",
+    "puerto": 8080,
+    "metodos": ["GET", "POST", "PUT", "DELETE", "HEAD"]
+  },
+  "activo": true,
+  "timestamp": "2025-12-14T08:00:00Z"
+}

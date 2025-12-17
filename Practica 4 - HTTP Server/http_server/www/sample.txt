@@ -1,0 +1,21 @@
+SERVIDOR HTTP SIMPLE - ARCHIVO DE PRUEBA
+=========================================
+
+Este es un archivo de texto plano (text/plain) servido por el servidor HTTP.
+
+El servidor implementa manualmente el protocolo HTTP/1.1 usando:
+- ServerSocket y Socket para la comunicación de red
+- Parsing manual de request line, headers y body
+- Construcción manual de respuestas HTTP bien formadas
+
+Características principales:
+- Métodos HTTP: GET, POST, PUT, DELETE, HEAD, TRACE
+- Tipos MIME: text/html, text/plain, application/json, image/png, etc.
+- Pool de hilos con ExecutorService
+- Sistema de redirección automática a servidor secundario
+- Interfaz web para navegación de archivos
+
+Este archivo demuestra que el servidor puede servir correctamente
+archivos de texto plano con el Content-Type apropiado.
+
+¡El servidor HTTP funciona correctamente!

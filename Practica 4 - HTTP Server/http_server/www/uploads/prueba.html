@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivo de Prueba - Uploads</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 10px;
+            color: #333;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 { color: #667eea; }
+        .success {
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Courier New', monospace;
+        }
+        .info-box {
+            background: #e7f3ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✅ ¡Archivo Cargado Correctamente!</h1>
+        
+        <div class="success">
+            <strong>El servidor HTTP está funcionando perfectamente</strong>
+        </div>
+        
+        <h2>📁 Directorio: /uploads/</h2>
+        <p>Este archivo se encuentra en el directorio <code>www/uploads/</code> y está siendo servido correctamente por el servidor HTTP.</p>
+        
+        <div class="info-box">
+            <h3>💡 Cómo usar este directorio:</h3>
+            <ol>
+                <li>Coloca cualquier archivo en <code>www/uploads/</code></li>
+                <li>Accede a él desde <code>http://localhost:8080/uploads/nombre-archivo</code></li>
+                <li>El servidor detectará automáticamente el tipo MIME correcto</li>
+            </ol>
+        </div>
+        
+        <h3>🔗 Enlaces de prueba:</h3>
+        <ul>
+            <li><a href="/uploads/ejemplo.json">ejemplo.json</a> - Archivo JSON de ejemplo</li>
+            <li><a href="/uploads/README.txt">README.txt</a> - Instrucciones del directorio</li>
+            <li><a href="/">Volver al inicio</a> - Interfaz principal</li>
+        </ul>
+        
+        <h3>📝 Información técnica:</h3>
+        <p><strong>Content-Type:</strong> text/html</p>
+        <p><strong>Servidor:</strong> SimpleHttpServer/1.0</p>
+        <p><strong>Protocolo:</strong> HTTP/1.1</p>
+    </div>
+</body>
+</html>
