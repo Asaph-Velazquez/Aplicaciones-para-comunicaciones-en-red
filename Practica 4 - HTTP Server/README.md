@@ -1,4 +1,4 @@
-# ***Práctica 4 - Servidor HTTP Simple - Java SE*** 🌐
+# ***Práctica 4 - Servidor HTTP Simple*** 🌐
 
 ## 📋 Narrativa
 Implementar un **servidor HTTP completo desde cero**. El servidor implementa manualmente el protocolo HTTP/1.1 con capacidades avanzadas de concurrencia, balanceo de carga y redirección automática.
@@ -11,13 +11,11 @@ El servidor proporciona:
 - **Interfaz web de gestión** - Panel de pruebas y monitoreo del servidor
 - **Detección automática de MIME types** - Configuración correcta de Content-Type
 
-***Parsing manual de HTTP/1.1 sin dependencias externas para demostrar comprensión profunda del protocolo***
-
 ---
 
 ## 📖 Descripción Técnica
 
-Servidor HTTP implementado completamente en **Java SE puro** usando **sockets** (`ServerSocket` y `Socket`), sin frameworks ni librerías HTTP externas. El servidor implementa manualmente el protocolo **HTTP/1.1** e incluye un sistema de concurrencia con pool de hilos y redirección automática.
+Servidor HTTP implementado usando **sockets** (`ServerSocket` y `Socket`). El servidor implementa el protocolo **HTTP/1.1** e incluye un sistema de concurrencia con pool de hilos y redirección automática.
 
 ## 🎯 Características Principales
 
@@ -260,14 +258,12 @@ El servidor implementa:
 - Verificación de que los archivos están dentro de `www/`
 - Manejo de excepciones para evitar crashes
 
-**⚠️ IMPORTANTE**: Este es un servidor educativo. **NO usarlo en producción**.
+**⚠️ IMPORTANTE**: Para uso en producción, se recomienda agregar capas adicionales de seguridad.
 
 ## 📝 Notas Importantes
 
-- **Sin librerías externas**: Todo implementado con Java SE puro
 - **Código simple y claro**: Prioriza legibilidad sobre optimización
 - **Bien comentado**: Cada clase y método tiene documentación
-- **Defendible oralmente**: Cada decisión tiene justificación clara
 
 ## 🐛 Limitaciones Conocidas
 
@@ -276,8 +272,6 @@ El servidor implementa:
 - No maneja chunked transfer encoding
 - No implementa keep-alive de conexiones
 - Pool size es fijo (no dinámico)
-
-Estas limitaciones son aceptables para un proyecto académico centrado en demostrar comprensión de sockets y HTTP básico.
 
 ## 📖 Referencias
 
