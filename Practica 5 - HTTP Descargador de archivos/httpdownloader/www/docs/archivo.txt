@@ -1,0 +1,16 @@
+Este es un archivo de texto de prueba
+======================================
+
+Contenido de ejemplo para el descargador HTTP
+
+Características del servidor:
+- Sockets nativos (ServerSocket y Socket)
+- Hilos para concurrencia
+- HTTP/1.1 manual
+- Descarga recursiva
+- Servir archivos locales
+
+Este archivo puede ser descargado usando:
+GET /download/local?path=docs/archivo.txt
+
+¡Prueba de descarga exitosa!

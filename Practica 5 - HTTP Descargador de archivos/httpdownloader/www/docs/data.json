@@ -1,0 +1,16 @@
+{
+  "nombre": "Archivo de Prueba",
+  "tipo": "JSON",
+  "descripcion": "Este es un archivo JSON de ejemplo",
+  "datos": {
+    "servidor": "HTTP Java SE",
+    "puerto": 8080,
+    "funcionalidades": [
+      "Descarga remota",
+      "Descarga local",
+      "Recursividad"
+    ]
+  },
+  "timestamp": "2025-12-23",
+  "activo": true
+}

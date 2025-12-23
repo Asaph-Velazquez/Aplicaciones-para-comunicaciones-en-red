@@ -1,0 +1,11 @@
+backend\RemoteDownloader$DownloadResult.class
+backend\Main.class
+backend\RemoteDownloader$DownloadedContent.class
+backend\RemoteDownloader.class
+backend\HTTPResponse.class
+backend\LocalFileServer$DownloadResult.class
+backend\ClientHandler.class
+backend\HTMLParser.class
+backend\HTTPRequest.class
+backend\HTTPServer.class
+backend\LocalFileServer.class

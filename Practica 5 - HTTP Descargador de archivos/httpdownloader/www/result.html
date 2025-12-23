@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado de Descarga - HTTP Downloader</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #FFD700;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 45px;
+            font-size: 0.95em;
+        }
+        .section {
+            background: rgba(40, 40, 40, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            border-color: rgba(255, 215, 0, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        .section h2 {
+            color: #FFD700;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .stats {
+            background: rgba(20, 20, 20, 0.5);
+            padding: 25px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            margin: 20px 0;
+        }
+        .stat-item {
+            margin: 15px 0;
+            font-size: 1.05em;
+            color: #ccc;
+            line-height: 1.8;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .stat-item .emoji {
+            font-size: 1.3em;
+            min-width: 30px;
+        }
+        .stat-item strong {
+            color: #FFD700;
+            margin-right: 8px;
+        }
+        .stat-value {
+            color: #fff;
+            font-weight: 500;
+        }
+        .errors {
+            background: rgba(231, 76, 60, 0.1);
+            border: 2px solid rgba(231, 76, 60, 0.4);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 25px;
+        }
+        .errors h3 {
+            color: #e74c3c;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+        .errors ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .errors li {
+            color: #ffcccc;
+            margin: 10px 0;
+            padding-left: 25px;
+            position: relative;
+            line-height: 1.5;
+        }
+        .errors li:before {
+            content: "⚠️";
+            position: absolute;
+            left: 0;
+        }
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #1a1a1a;
+            padding: 14px 28px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+            margin-top: 20px;
+            text-align: center;
+        }
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #FFA500 0%, #FFD700 100%);
+        }
+        .success-icon {
+            font-size: 2em;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+        .footer {
+            text-align: center;
+            color: #666;
+            margin-top: 50px;
+            font-size: 0.85em;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 215, 0, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📥 Descargador HTTP</h1>
+        <p class="subtitle">Resultado de la operación</p>
+
+        <div class="section">
+            <h2>
+                <span class="success-icon">{{STATUS_ICON}}</span>
+                {{STATUS_TITLE}}
+            </h2>
+            
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="emoji">📁</span>
+                    <div>
+                        <strong>Archivos descargados:</strong>
+                        <span class="stat-value">{{FILES_COUNT}}</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="emoji">💾</span>
+                    <div>
+                        <strong>Bytes descargados:</strong>
+                        <span class="stat-value">{{BYTES_FORMATTED}}</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="emoji">⏱️</span>
+                    <div>
+                        <strong>Tiempo:</strong>
+                        <span class="stat-value">{{TIME_MS}} ms</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span class="emoji">📂</span>
+                    <div>
+                        <strong>Directorio:</strong>
+                        <span class="stat-value">{{DIRECTORY}}</span>
+                    </div>
+                </div>
+            </div>
+
+            {{ERRORS_SECTION}}
+
+            <a href="/" class="back-button">← Volver al inicio</a>
+        </div>
+
+        <div class="footer">
+            <p>HTTP Downloader - Java SE | Puerto 8080</p>
+            <p>Implementado con Sockets y Threads</p>
+        </div>
+    </div>
+</body>
+</html>

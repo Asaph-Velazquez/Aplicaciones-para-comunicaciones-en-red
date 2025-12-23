@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Descargador HTTP - Java SE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #FFD700;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #FFD700;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.2em;
+            font-weight: 600;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+        }
+        .subtitle {
+            text-align: center;
+            color: #aaa;
+            margin-bottom: 45px;
+            font-size: 0.95em;
+        }
+        .section {
+            background: rgba(40, 40, 40, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 30px;
+            margin-bottom: 25px;
+            border-radius: 15px;
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+        .section:hover {
+            border-color: rgba(255, 215, 0, 0.6);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+        .section h2 {
+            color: #FFD700;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            font-weight: 600;
+        }
+        .section p {
+            color: #ccc;
+            margin-bottom: 20px;
+            line-height: 1.6;
+            font-size: 0.95em;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #FFD700;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(20, 20, 20, 0.8);
+            border: 2px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            color: #FFD700;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            background: rgba(30, 30, 30, 0.9);
+            border-color: #FFD700;
+            box-shadow: 0 0 0 3px rgba(255, 215, 0, 0.1);
+        }
+        input[type="text"]::placeholder {
+            color: #666;
+        }
+        button {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: #1a1a1a;
+            border: none;
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.5);
+            background: linear-gradient(135deg, #FFF 0%, #FFD700 100%);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .example {
+            background: rgba(20, 20, 20, 0.5);
+            padding: 10px 15px;
+            border-left: 3px solid rgba(255, 215, 0, 0.5);
+            border-radius: 4px;
+            margin-top: 10px;
+            font-family: 'Courier New', monospace;
+            color: #999;
+            font-size: 0.85em;
+        }
+        .status {
+            margin-top: 15px;
+            padding: 12px 15px;
+            border-radius: 8px;
+            display: none;
+            font-size: 0.9em;
+            border: 1px solid;
+        }
+        .status.success {
+            background: rgba(0, 100, 0, 0.2);
+            color: #66ff66;
+            border-color: rgba(102, 255, 102, 0.5);
+        }
+        .status.error {
+            background: rgba(139, 0, 0, 0.2);
+            color: #ff6b6b;
+            border-color: rgba(255, 107, 107, 0.5);
+        }
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #777;
+            font-size: 0.85em;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 215, 0, 0.1);
+        }
+        .footer p {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Descargador HTTP</h1>
+        <p class="subtitle">Servidor HTTP con Java SE puro • Sockets • Threads • HTTP/1.1</p>
+
+        <!-- Descarga Remota -->
+        <div class="section">
+            <h2>🌐 Opción 1: Descarga Remota</h2>
+            <p>Descarga recursiva desde servidor remoto (comportamiento tipo wget -r)</p>
+            <div class="input-group">
+                <label for="remoteUrl">URL del servidor remoto:</label>
+                <input type="text" id="remoteUrl" placeholder="http://example.com">
+                <div class="example">💡 Ejemplo: http://example.com</div>
+            </div>
+            <button onclick="downloadRemote()">🚀 Descargar desde Red</button>
+            <div id="remoteStatus" class="status"></div>
+        </div>
+
+        <!-- Descarga Local -->
+        <div class="section">
+            <h2>📂 Opción 2: Descarga Local</h2>
+            <p>Descargar archivos desde directorio local publicado en el servidor</p>
+            <div class="input-group">
+                <label for="localPath">Ruta local (relativa a 'www/'):</label>
+                <input type="text" id="localPath" placeholder="docs" value="">
+                <div class="example">💡 Ejemplo: docs/manual (vacío para raíz)</div>
+            </div>
+            <button onclick="downloadLocal()">📥 Descargar Local</button>
+            <div id="localStatus" class="status"></div>
+        </div>
+
+        <!-- Archivos Disponibles -->
+        <div class="section">
+            <h2>📚 Archivos Disponibles en el Directorio de Publicación</h2>
+            <p>Archivos listos para descargar desde el servidor local</p>
+            <div style="background: rgba(20, 20, 20, 0.5); padding: 20px; border-radius: 8px; margin-top: 15px;">
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #FFD700;">📁 docs/</strong>
+                    <button onclick="downloadPath('docs')" style="width: auto; padding: 8px 16px; margin-left: 10px; font-size: 0.85em;">⬇️ Descargar todo</button>
+                </div>
+                <ul style="list-style: none; padding-left: 20px; color: #ccc;">
+                    <li style="margin: 10px 0;">
+                        <span style="color: #FFD700;">📄</span> 
+                        <a href="/download/local?path=docs/index.html" style="color: #66ccff; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">index.html</a>
+                        <span style="color: #999; font-size: 0.85em; margin-left: 10px;">HTML de prueba</span>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <span style="color: #FFD700;">📋</span> 
+                        <a href="/download/local?path=docs/data.json" style="color: #66ccff; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">data.json</a>
+                        <span style="color: #999; font-size: 0.85em; margin-left: 10px;">Datos en formato JSON</span>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <span style="color: #FFD700;">📝</span> 
+                        <a href="/download/local?path=docs/archivo.txt" style="color: #66ccff; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">archivo.txt</a>
+                        <span style="color: #999; font-size: 0.85em; margin-left: 10px;">Archivo de texto</span>
+                    </li>
+                    <li style="margin: 10px 0;">
+                        <span style="color: #FFD700;">☕</span> 
+                        <a href="/download/local?path=docs/Example.java" style="color: #66ccff; text-decoration: none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">Example.java</a>
+                        <span style="color: #999; font-size: 0.85em; margin-left: 10px;">Clase Java de ejemplo</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>🎓 Proyecto Académico - Práctica 5</p>
+            <p>Java SE Puro • Sin Frameworks • Implementación Manual</p>
+        </div>
+    </div>
+
+    <script>
+        function downloadRemote() {
+            const url = document.getElementById('remoteUrl').value;
+            const status = document.getElementById('remoteStatus');
+            
+            if (!url) {
+                showStatus(status, 'error', '❌ Por favor, ingresa una URL');
+                return;
+            }
+            
+            showStatus(status, 'success', '⏳ Descargando... Esto puede tardar unos momentos');
+            
+            const downloadUrl = '/download/net?url=' + encodeURIComponent(url);
+            window.location.href = downloadUrl;
+        }
+        
+        function downloadLocal() {
+            const path = document.getElementById('localPath').value;
+            const status = document.getElementById('localStatus');
+            
+            showStatus(status, 'success', '⏳ Preparando descarga...');
+            
+            const downloadUrl = '/download/local?path=' + encodeURIComponent(path);
+            window.location.href = downloadUrl;
+        }
+        
+        function downloadPath(path) {
+            const downloadUrl = '/download/local?path=' + encodeURIComponent(path);
+            window.location.href = downloadUrl;
+        }
+        
+        function showStatus(element, type, message) {
+            element.className = 'status ' + type;
+            element.textContent = message;
+            element.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
