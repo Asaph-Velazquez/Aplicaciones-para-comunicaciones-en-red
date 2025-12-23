@@ -1,8 +1,23 @@
-# Chat Grupal UDP-WebSocket Bridge
+# ***Práctica 3 - Chat Grupal UDP-WebSocket Bridge*** 💬
 
-## Descripción General
+## 📋 Narrativa
+Implementar un sistema de **chat en tiempo real** con arquitectura de microservicios híbrida que combine múltiples protocolos de red. El sistema permite comunicación grupal y privada mediante una arquitectura innovadora de tres capas: un frontend Angular conectado vía WebSocket a un servidor Node.js que actúa como puente traductor hacia un backend Java UDP.
 
-Proyecto de **comunicación en red** con arquitectura integrada:
+El usuario podrá:
+- Unirse a salas de chat con nombre personalizado
+- Enviar mensajes públicos a toda la sala
+- Enviar mensajes privados a usuarios específicos
+- Ver lista de usuarios conectados en tiempo real
+- Recibir notificaciones de entrada/salida de usuarios
+- Enviar emojis con renderizado especial
+
+***La arquitectura demuestra integración de protocolos modernos (WebSocket) con protocolos clásicos (UDP) mediante un puente traductor***
+
+---
+
+## 🏗️ Descripción de la Arquitectura
+
+Sistema de **comunicación en red** con arquitectura integrada:
 
 - **Frontend Angular**: Interfaz web que se conecta vía **WebSocket**
 - **Puente Node.js**: Traduce WebSocket ↔ **UDP** (única vía de comunicación con backend)
@@ -12,7 +27,7 @@ Proyecto de **comunicación en red** con arquitectura integrada:
 
 ---
 
-## Arquitectura
+## 📐 Diagrama de Arquitectura
 
 ```
 ┌────────────────────────────────────────────────────┐
@@ -34,7 +49,7 @@ Proyecto de **comunicación en red** con arquitectura integrada:
 └────────────────────────────────────────────────────┘
 ```
 
-### Componentes
+### 🧩 Componentes del Sistema
 
 | Componente | Tecnología | Puerto | Rol |
 |-----------|-----------|--------|-----|
@@ -44,9 +59,9 @@ Proyecto de **comunicación en red** con arquitectura integrada:
 
 ---
 
-## Flujo de Comunicación
+## 🔄 Flujo de Comunicación
 
-### 1. **Conexión (JOIN)**
+### 1. **🚪 Conexión (JOIN)**
 
 ```
 Frontend (Angular)          Puente Node.js          Backend Java
@@ -71,7 +86,7 @@ Frontend (Angular)          Puente Node.js          Backend Java
 
 ---
 
-### 2. **Mensaje Público (SEND)**
+### 2. **📢 Mensaje Público (SEND)**
 
 ```
 Frontend (Angular)          Puente Node.js          Backend Java
@@ -99,7 +114,7 @@ Frontend (Angular)          Puente Node.js          Backend Java
 
 ---
 
-### 3. **Mensaje Privado (PRIVATE)**
+### 3. **🔒 Mensaje Privado (PRIVATE)**
 
 ```
 Frontend (Angular)          Puente Node.js          Backend Java
@@ -133,9 +148,9 @@ Frontend (Angular)          Puente Node.js          Backend Java
 
 ---
 
-## Protocolo UDP (Backend)
+## 📡 Protocolo UDP (Backend)
 
-### Comandos recibidos por Backend
+### ⚡ Comandos recibidos por Backend
 
 | Comando | Formato | Ejemplo |
 |---------|---------|---------|
@@ -146,7 +161,7 @@ Frontend (Angular)          Puente Node.js          Backend Java
 
 ---
 
-## Protocolo WebSocket (Frontend)
+## 🌐 Protocolo WebSocket (Frontend)
 
 ### Comandos enviados desde Frontend
 

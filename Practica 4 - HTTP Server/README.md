@@ -1,6 +1,21 @@
-# Servidor HTTP Simple - Java SE
+# ***Práctica 4 - Servidor HTTP Simple - Java SE*** 🌐
 
-## Descripción
+## 📋 Narrativa
+Implementar un **servidor HTTP completo desde cero**. El servidor implementa manualmente el protocolo HTTP/1.1 con capacidades avanzadas de concurrencia, balanceo de carga y redirección automática.
+
+El servidor proporciona:
+- **Manejo completo de métodos HTTP** - GET, POST, PUT, DELETE, HEAD, TRACE
+- **Servir archivos estáticos** - HTML, CSS, JavaScript, imágenes, PDFs
+- **Sistema de concurrencia** - Pool de hilos para múltiples conexiones simultáneas
+- **Balanceo de carga inteligente** - Redirección automática cuando se detecta alta carga
+- **Interfaz web de gestión** - Panel de pruebas y monitoreo del servidor
+- **Detección automática de MIME types** - Configuración correcta de Content-Type
+
+***Parsing manual de HTTP/1.1 sin dependencias externas para demostrar comprensión profunda del protocolo***
+
+---
+
+## 📖 Descripción Técnica
 
 Servidor HTTP implementado completamente en **Java SE puro** usando **sockets** (`ServerSocket` y `Socket`), sin frameworks ni librerías HTTP externas. El servidor implementa manualmente el protocolo **HTTP/1.1** e incluye un sistema de concurrencia con pool de hilos y redirección automática.
 
@@ -12,37 +27,37 @@ Servidor HTTP implementado completamente en **Java SE puro** usando **sockets** 
 - ✅ Manejo de body usando `Content-Length`
 - ✅ Construcción manual de respuestas HTTP bien formadas
 
-### Métodos HTTP Soportados
-- **GET**: Sirve archivos estáticos
-- **POST**: Acepta datos en el body
-- **PUT**: Acepta actualizaciones
-- **DELETE**: Procesa eliminaciones
-- **HEAD**: Retorna headers sin body
-- **TRACE**: Devuelve la request para diagnóstico
+### 🔧 Métodos HTTP Soportados
+- **GET** 📥: Sirve archivos estáticos
+- **POST** 📤: Acepta datos en el body
+- **PUT** ✏️: Acepta actualizaciones
+- **DELETE** 🗑️: Procesa eliminaciones
+- **HEAD** 📋: Retorna headers sin body
+- **TRACE** 🔍: Devuelve la request para diagnóstico
 
-### Tipos MIME
+### 📄 Tipos MIME
 El servidor detecta y envía correctamente los siguientes tipos MIME:
-- `text/html` - Páginas HTML
-- `text/plain` - Archivos de texto
-- `application/json` - Datos JSON
-- `image/png` - Imágenes PNG
-- `image/jpeg` - Imágenes JPEG
-- `text/css` - Hojas de estilo
-- `application/javascript` - JavaScript
-- `application/pdf` - Documentos PDF
+- `text/html` 🌐 - Páginas HTML
+- `text/plain` 📝 - Archivos de texto
+- `application/json` 📊 - Datos JSON
+- `image/png` 🖼️ - Imágenes PNG
+- `image/jpeg` 📷 - Imágenes JPEG
+- `text/css` 🎨 - Hojas de estilo
+- `application/javascript` ⚙️ - JavaScript
+- `application/pdf` 📑 - Documentos PDF
 
-### Sistema de Concurrencia
+### ⚡ Sistema de Concurrencia
 - Pool de hilos manual usando `ExecutorService`
 - Contador de conexiones activas en tiempo real
 - Monitoreo de carga del servidor
 
-### Redirección Automática
+### 🔀 Redirección Automática (Balanceo de Carga)
 Cuando las conexiones activas superan el **50% del pool**:
 1. Se levanta automáticamente un servidor secundario en el puerto 8081
 2. Nuevas peticiones se redirigen con código **HTTP 307 (Temporary Redirect)**
 3. Se utiliza el header `Location` para indicar el servidor secundario
 
-### Interfaz Web
+### 🖥️ Interfaz Web
 - HTML + CSS + JavaScript para navegación de archivos
 - Explorador de archivos estáticos
 - Panel de pruebas de métodos HTTP
@@ -92,9 +107,9 @@ private static final int SECONDARY_PORT = 8081;  // Puerto secundario
 private static final int POOL_SIZE = 10;         // Tamaño del pool de hilos
 ```
 
-## 🚀 Uso
+## 🚀 Instrucciones de Uso
 
-### Compilar el Proyecto
+### 🔨 Compilar el Proyecto
 
 Con Maven:
 ```bash
@@ -106,7 +121,7 @@ Con javac (alternativa):
 javac -d target/classes src/main/java/http_server/*.java
 ```
 
-### Ejecutar el Servidor
+### ▶️ Ejecutar el Servidor
 
 Con Maven:
 ```bash
@@ -118,15 +133,15 @@ Con java (alternativa):
 java -cp target/classes http_server.Main
 ```
 
-### Acceder a la Interfaz Web
+### 🌐 Acceder a la Interfaz Web
 Abre tu navegador en:
 ```
 http://localhost:8080
 ```
 
-### Probar el Servidor
+### 🧪 Probar el Servidor
 
-#### Con curl:
+#### 💻 Con curl:
 ```bash
 # GET
 curl http://localhost:8080/index.html
@@ -147,7 +162,7 @@ curl -I http://localhost:8080/index.html
 curl -X TRACE http://localhost:8080/
 ```
 
-#### Con la interfaz web:
+#### 🖱️ Con la interfaz web:
 1. Navega a `http://localhost:8080`
 2. Usa el panel "Probar Métodos HTTP"
 3. Selecciona un método y haz clic en el botón correspondiente
@@ -215,25 +230,25 @@ Punto de entrada que:
 - Inicia el servidor primario
 - Configura shutdown hook para cierre graceful
 
-## 🎓 Conceptos Académicos Demostrados
+## 🎓 Conceptos Técnicos Demostrados
 
-### Redes y Sockets
+### 🔌 Redes y Sockets
 - Uso de `ServerSocket` para escuchar conexiones
 - Uso de `Socket` para comunicación bidireccional
 - Lectura de `InputStream` y escritura en `OutputStream`
 
-### Protocolo HTTP
+### 📡 Protocolo HTTP
 - Parsing manual de request line: `METHOD /resource HTTP/1.1`
 - Lectura de headers en formato `Key: Value`
 - Separación headers-body con `\r\n\r\n`
 - Construcción de respuestas: status line + headers + body
 
-### Concurrencia
+### ⚙️ Concurrencia
 - Pool de hilos con `ExecutorService.newFixedThreadPool()`
 - Variables atómicas con `AtomicInteger` para thread-safety
 - Sincronización con `synchronized` en `RedirectionManager`
 
-### Patrones de Diseño
+### 🏗️ Patrones de Diseño
 - **Separación de responsabilidades**: cada clase tiene un propósito claro
 - **Encapsulación**: datos privados con getters/setters
 - **Factory methods**: métodos estáticos para crear respuestas comunes
@@ -270,10 +285,13 @@ Estas limitaciones son aceptables para un proyecto académico centrado en demost
 - [Java ServerSocket Documentation](https://docs.oracle.com/javase/8/docs/api/java/net/ServerSocket.html)
 - [Java ExecutorService Documentation](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ExecutorService.html)
 
-## 👨‍💻 Autor
+## � Desarrolladores
 
-Proyecto Académico - 2025
+- **Velazquez Parral Saul Asaph**
+- **Amador Martinez Jocelyn Lucia**
+
+**Año:** 2025
 
 ---
 
-**¡El servidor está listo para usarse y defenderse en revisión oral!**
+**🎯 ¡El servidor HTTP está listo para usar! Accede a http://localhost:8080 para comenzar.**
