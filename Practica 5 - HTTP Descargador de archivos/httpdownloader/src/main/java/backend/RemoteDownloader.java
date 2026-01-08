@@ -5,24 +5,16 @@ import java.net.*;
 import java.util.*;
 import java.util.concurrent.*;
 
-/**
- * Implementa descarga recursiva de archivos desde servidores remotos.
- * Actúa como cliente HTTP usando sockets para realizar peticiones GET.
- * Comportamiento similar a wget -r
- */
 public class RemoteDownloader {
     private final ExecutorService threadPool;
     private final Set<String> visitedUrls;
     private final Set<String> downloadedFiles;
     private final int maxDepth;
     private final String outputDir;
+    private String startUrlPath;
+    private String baseHost;
+    private final Object dirLock = new Object();
 
-    /**
-     * Constructor
-     * @param maxThreads Número de hilos para descargas concurrentes
-     * @param maxDepth Profundidad máxima de recursión
-     * @param outputDir Directorio donde guardar los archivos descargados
-     */
     public RemoteDownloader(int maxThreads, int maxDepth, String outputDir) {
         this.threadPool = Executors.newFixedThreadPool(maxThreads);
         this.visitedUrls = Collections.synchronizedSet(new HashSet<>());
@@ -31,80 +23,195 @@ public class RemoteDownloader {
         this.outputDir = outputDir;
     }
 
-    /**
-     * Inicia la descarga recursiva desde una URL
-     * @param startUrl URL inicial
-     * @return Información sobre los archivos descargados
-     */
     public DownloadResult downloadRecursive(String startUrl) {
         DownloadResult result = new DownloadResult();
         result.startTime = System.currentTimeMillis();
 
         try {
-            // Crear directorio de salida
+            URL urlObj = new URL(startUrl);
+            this.startUrlPath = urlObj.getPath();
+            this.baseHost = urlObj.getHost();
+            if (!this.startUrlPath.endsWith("/")) {
+                int lastSlash = this.startUrlPath.lastIndexOf('/');
+                if (lastSlash > 0) {
+                    this.startUrlPath = this.startUrlPath.substring(0, lastSlash + 1);
+                }
+            }
+            
+            System.out.println("🎯 Scope de descarga limitado a: " + this.baseHost + this.startUrlPath + " y subdirectorios");
+            
             File dir = new File(outputDir);
             if (!dir.exists()) {
                 dir.mkdirs();
             }
 
-            // Iniciar descarga recursiva
             downloadRecursiveInternal(startUrl, 0, result);
 
-            // Esperar a que todos los hilos terminen
+            System.out.println("\n⏳ Esperando a que terminen todas las descargas...");
+            
+            ThreadPoolExecutor executor = (ThreadPoolExecutor) threadPool;
+            int lastActiveCount = -1;
+            int stableCount = 0;
+            
+            while (true) {
+                int activeCount = executor.getActiveCount();
+                long queueSize = executor.getQueue().size();
+                long completedTasks = executor.getCompletedTaskCount();
+                
+                if (activeCount != lastActiveCount) {
+                    System.out.println(String.format(
+                        "   Hilos activos: %d | En cola: %d | Completadas: %d",
+                        activeCount, queueSize, completedTasks
+                    ));
+                    lastActiveCount = activeCount;
+                    stableCount = 0;
+                }
+                
+                if (activeCount == 0 && queueSize == 0) {
+                    stableCount++;
+                    if (stableCount >= 3) {
+                        break;
+                    }
+                }
+                
+                Thread.sleep(500);
+            }
+            
+            System.out.println("✅ Todas las descargas completadas\n");
+            
             threadPool.shutdown();
-            threadPool.awaitTermination(60, TimeUnit.SECONDS);
+            threadPool.awaitTermination(10, TimeUnit.SECONDS);
 
         } catch (Exception e) {
             result.errors.add("Error general: " + e.getMessage());
+            e.printStackTrace();
+        } finally {
+            if (!threadPool.isShutdown()) {
+                threadPool.shutdownNow();
+            }
         }
 
         result.endTime = System.currentTimeMillis();
         return result;
     }
 
-    /**
-     * Método interno recursivo para descargar
-     */
+    private boolean isWithinScope(String url) {
+        if (startUrlPath == null) return true;
+        
+        try {
+            URL urlObj = new URL(url);
+            String path = urlObj.getPath().replaceAll("/+", "/");
+            String normalizedStartPath = startUrlPath.replaceAll("/+", "/");
+            
+            boolean withinScope = path.startsWith(normalizedStartPath);
+            
+            if (!withinScope) {
+                System.out.println("    ⛔ Fuera de scope: " + url);
+                System.out.println("       Path actual: " + path);
+                System.out.println("       Path base: " + normalizedStartPath);
+            }
+            
+            return withinScope;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     private void downloadRecursiveInternal(String url, int depth, DownloadResult result) {
-        // Verificar profundidad máxima
         if (depth > maxDepth) {
+            System.out.println("⚠️  Profundidad máxima alcanzada (" + maxDepth + ") para: " + url);
+            return;
+        }
+        
+        String indent = "  ".repeat(depth);
+        System.out.println(indent + "🔽 Nivel " + depth + ": " + url);
+
+        url = HTMLParser.normalizeUrl(url);
+        if (!visitedUrls.add(url)) {
+            System.out.println(indent + "⏭️  Ya visitada: " + url);
             return;
         }
 
-        // Normalizar y verificar si ya fue visitada
-        url = HTMLParser.normalizeUrl(url);
-        if (!visitedUrls.add(url)) {
-            return; // Ya visitada
-        }
-
         try {
-            // Descargar el contenido
             DownloadedContent content = downloadUrl(url);
             if (content == null) {
-                result.errors.add("No se pudo descargar: " + url);
+                System.out.println(indent + "⚠️  No se pudo descargar");
                 return;
             }
 
-            // Guardar el archivo
-            String filename = getFilenameFromUrl(url);
-            File outputFile = new File(outputDir, filename);
-            saveToFile(content.data, outputFile);
-            
-            downloadedFiles.add(filename);
-            result.filesDownloaded++;
-            result.bytesDownloaded += content.data.length;
-
-            // Si es HTML, extraer y seguir enlaces
+            boolean isDirectoryListing = false;
             if (content.contentType != null && content.contentType.contains("text/html")) {
                 String html = new String(content.data);
-                List<String> links = HTMLParser.extractLinks(html, url);
+                List<String> directoryFiles = HTMLParser.extractDirectoryListing(html, url);
+                isDirectoryListing = !directoryFiles.isEmpty();
+            }
+
+            String relativePath = getRelativePathFromUrl(url, isDirectoryListing);
+            try {
+                File outputFile = createFileWithPath(url, isDirectoryListing);
+                saveToFile(content.data, outputFile);
                 
-                // Filtrar solo enlaces del mismo dominio
-                for (String link : links) {
-                    if (HTMLParser.isSameDomain(url, link)) {
-                        // Descargar enlaces en paralelo (con límite de profundidad)
-                        final int nextDepth = depth + 1;
-                        threadPool.submit(() -> downloadRecursiveInternal(link, nextDepth, result));
+                downloadedFiles.add(relativePath);
+                result.filesDownloaded++;
+                result.bytesDownloaded += content.data.length;
+            } catch (IOException e) {
+                String errorMsg = "Error guardando " + url + ": " + e.getMessage();
+                System.err.println(indent + "❌ " + errorMsg);
+                result.errors.add(errorMsg);
+                return;
+            }
+
+            if (content.contentType != null && content.contentType.contains("text/html")) {
+                String html = new String(content.data);
+                List<String> directoryFiles = HTMLParser.extractDirectoryListing(html, url);
+                
+                if (!directoryFiles.isEmpty()) {
+                    System.out.println("📁 Procesando listado de directorio: " + directoryFiles.size() + " elementos");
+                    System.out.println("📝 HTML del listado guardado en: " + relativePath);
+                    
+                    for (String fileUrl : directoryFiles) {
+                        System.out.println("  🔍 Analizando: " + fileUrl);
+                        
+                        if (!isWithinScope(fileUrl)) continue;
+                        
+                        if (!HTMLParser.isSameDomain(url, fileUrl)) {
+                            System.out.println("    ⚠️ Dominio diferente, saltando");
+                            continue;
+                        }
+                        
+                        if (fileUrl.endsWith("/")) {
+                            System.out.println("    📂 → Subdirectorio");
+                            final int nextDepth = depth + 1;
+                            threadPool.submit(() -> downloadRecursiveInternal(fileUrl, nextDepth, result));
+                        } else if (HTMLParser.isLikelyFile(fileUrl)) {
+                            System.out.println("    📄 → Archivo");
+                            threadPool.submit(() -> downloadResourceOnly(fileUrl, result));
+                        } else {
+                            System.out.println("    ❓ → Elemento ambiguo");
+                            final int nextDepth = depth + 1;
+                            threadPool.submit(() -> tryAsDirectoryFirst(fileUrl, nextDepth, result));
+                        }
+                    }
+                } else {
+                    List<String> resources = HTMLParser.extractResources(html, url);
+                    
+                    if (!resources.isEmpty()) {
+                        System.out.println("🔍 Encontrados " + resources.size() + " recursos");
+                        
+                        for (String resource : resources) {
+                            if (HTMLParser.isSameDomain(url, resource)) {
+                                System.out.println("  📦 Descargando recurso: " + resource);
+                                threadPool.submit(() -> downloadResourceOnly(resource, result));
+                            }
+                        }
+                    }
+                    
+                    List<String> links = HTMLParser.extractLinks(html, url);
+                    for (String link : links) {
+                        if (HTMLParser.isSameDomain(url, link)) {
+                            final int nextDepth = depth + 1;
+                            threadPool.submit(() -> downloadRecursiveInternal(link, nextDepth, result));
+                        }
                     }
                 }
             }
@@ -114,12 +221,134 @@ public class RemoteDownloader {
         }
     }
 
-    /**
-     * Descarga una URL usando sockets y peticiones GET
-     * @param urlString URL a descargar
-     * @return Contenido descargado o null si hay error
-     */
+    private void downloadResourceOnly(String url, DownloadResult result) {
+        url = HTMLParser.normalizeUrl(url);
+        if (!visitedUrls.add(url)) return;
+
+        try {
+            System.out.println("    ⬇️  Descargando: " + url);
+            
+            DownloadedContent content = downloadUrl(url);
+            if (content == null) {
+                System.out.println("    ⚠️  No disponible");
+                return;
+            }
+
+            try {
+                File outputFile = createFileWithPath(url);
+                saveToFile(content.data, outputFile);
+                
+                String relativePath = getRelativePathFromUrl(url);
+                downloadedFiles.add(relativePath);
+                result.filesDownloaded++;
+                result.bytesDownloaded += content.data.length;
+                
+                System.out.println("    ✅ Guardado: " + relativePath + " (" + content.data.length + " bytes)");
+            } catch (IOException e) {
+                String errorMsg = "Error guardando " + url + ": " + e.getMessage();
+                System.err.println("    ❌ " + errorMsg);
+                result.errors.add(errorMsg);
+            }
+
+        } catch (Exception e) {
+            System.err.println("    ❌ Error: " + e.getMessage());
+            result.errors.add("Error descargando " + url + ": " + e.getMessage());
+        }
+    }
+
+    private void tryAsDirectoryFirst(String url, int depth, DownloadResult result) {
+        String dirUrl = url.endsWith("/") ? url : url + "/";
+        String normalizedDirUrl = HTMLParser.normalizeUrl(dirUrl);
+        
+        if (visitedUrls.contains(normalizedDirUrl)) {
+            System.out.println("    ⏭️  Ya visitado como directorio");
+            return;
+        }
+        
+        System.out.println("    🔍 Intentando como directorio: " + dirUrl);
+        
+        DownloadedContent content = downloadUrl(dirUrl);
+        
+        if (content != null && content.contentType != null && content.contentType.contains("text/html")) {
+            System.out.println("    ✅ Confirmado como directorio");
+            visitedUrls.add(normalizedDirUrl);
+            
+            try {
+                File outputFile = createFileWithPath(dirUrl, true);
+                saveToFile(content.data, outputFile);
+                
+                String relativePath = getRelativePathFromUrl(dirUrl, true);
+                downloadedFiles.add(relativePath);
+                result.filesDownloaded++;
+                result.bytesDownloaded += content.data.length;
+            } catch (Exception e) {
+                result.errors.add("Error guardando directorio " + dirUrl + ": " + e.getMessage());
+            }
+            
+            String html = new String(content.data);
+            List<String> directoryFiles = HTMLParser.extractDirectoryListing(html, dirUrl);
+            
+            if (!directoryFiles.isEmpty()) {
+                System.out.println("    📁 Encontrados " + directoryFiles.size() + " elementos");
+                
+                for (String fileUrl : directoryFiles) {
+                    if (HTMLParser.isSameDomain(dirUrl, fileUrl)) {
+                        if (fileUrl.endsWith("/")) {
+                            final int nextDepth = depth + 1;
+                            threadPool.submit(() -> downloadRecursiveInternal(fileUrl, nextDepth, result));
+                        } else if (HTMLParser.isLikelyFile(fileUrl)) {
+                            threadPool.submit(() -> downloadResourceOnly(fileUrl, result));
+                        } else {
+                            final int nextDepth = depth + 1;
+                            threadPool.submit(() -> tryAsDirectoryFirst(fileUrl, nextDepth, result));
+                        }
+                    }
+                }
+            }
+        } else {
+            System.out.println("    🔄 No es directorio, intentando como archivo");
+            
+            String normalizedUrl = HTMLParser.normalizeUrl(url);
+            if (visitedUrls.contains(normalizedUrl)) {
+                System.out.println("    ⏭️  Ya visitado como archivo");
+                return;
+            }
+            
+            DownloadedContent fileContent = downloadUrl(url);
+            if (fileContent == null) {
+                System.out.println("    ❌ No existe");
+                return;
+            }
+            
+            visitedUrls.add(normalizedUrl);
+            try {
+                File outputFile = createFileWithPath(url);
+                saveToFile(fileContent.data, outputFile);
+                
+                String relativePath = getRelativePathFromUrl(url);
+                downloadedFiles.add(relativePath);
+                result.filesDownloaded++;
+                result.bytesDownloaded += fileContent.data.length;
+                
+                System.out.println("    ✅ Guardado: " + relativePath + " (" + fileContent.data.length + " bytes)");
+            } catch (Exception e) {
+                System.err.println("    ❌ Error guardando: " + e.getMessage());
+            }
+        }
+    }
+
     public DownloadedContent downloadUrl(String urlString) {
+        return downloadUrlWithRedirects(urlString, 0);
+    }
+
+    private DownloadedContent downloadUrlWithRedirects(String urlString, int redirectCount) {
+        final int MAX_REDIRECTS = 10;
+        
+        if (redirectCount > MAX_REDIRECTS) {
+            System.err.println("❌ Demasiadas redirecciones para: " + urlString);
+            return null;
+        }
+        
         Socket socket = null;
         try {
             URL url = new URL(urlString);
@@ -130,12 +359,9 @@ public class RemoteDownloader {
                 path += "?" + url.getQuery();
             }
 
-            // Conectar usando socket
             socket = new Socket(host, port);
-            socket.setSoTimeout(15000); // Timeout de 15 segundos
+            socket.setSoTimeout(15000);
 
-            // Construir petición HTTP GET
-            OutputStream outputStream = socket.getOutputStream();
             String request = "GET " + path + " HTTP/1.1\r\n" +
                            "Host: " + host + "\r\n" +
                            "User-Agent: JavaHTTPDownloader/1.0\r\n" +
@@ -143,7 +369,6 @@ public class RemoteDownloader {
                            "Connection: close\r\n" +
                            "\r\n";
             
-            // LOG: Mostrar petición enviada
             System.out.println("\n" + "=".repeat(80));
             System.out.println("🌐 PETICIÓN GET A: " + urlString);
             System.out.println("=".repeat(80));
@@ -154,26 +379,27 @@ public class RemoteDownloader {
             System.out.println("   Accept: */*");
             System.out.println("   Connection: close");
             
-            outputStream.write(request.getBytes("UTF-8"));
-            outputStream.flush();
+            socket.getOutputStream().write(request.getBytes("UTF-8"));
+            socket.getOutputStream().flush();
 
-            // Leer respuesta completa
             InputStream input = socket.getInputStream();
-            
-            // Leer línea de estado (byte por byte hasta encontrar \r\n)
             String statusLine = readLine(input);
             
-            // LOG: Mostrar respuesta
             System.out.println("\n📥 RESPUESTA DEL SERVIDOR:");
             System.out.println("   " + statusLine);
             
-            if (statusLine == null || !statusLine.contains("200")) {
-                System.err.println("❌ Estado HTTP no OK para " + urlString + ": " + statusLine);
+            int statusCode = 0;
+            try {
+                String[] parts = statusLine.split("\\s+");
+                if (parts.length >= 2) {
+                    statusCode = Integer.parseInt(parts[1]);
+                }
+            } catch (Exception e) {
+                System.err.println("❌ No se pudo parsear código de estado");
                 System.out.println("=".repeat(80) + "\n");
                 return null;
             }
 
-            // Leer headers (línea por línea hasta encontrar línea vacía)
             Map<String, String> headers = new HashMap<>();
             System.out.println("\n📋 ENCABEZADOS DE RESPUESTA:");
             String line;
@@ -187,12 +413,39 @@ public class RemoteDownloader {
                 }
             }
 
-            // Leer body completo
-            ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
+            if (statusCode >= 300 && statusCode < 400) {
+                String location = headers.get("location");
+                if (location != null && !location.isEmpty()) {
+                    String redirectUrl;
+                    if (location.startsWith("http://") || location.startsWith("https://")) {
+                        redirectUrl = location;
+                    } else {
+                        URL baseUrl = new URL(urlString);
+                        URL resolvedUrl = new URL(baseUrl, location);
+                        redirectUrl = resolvedUrl.toString();
+                    }
+                    
+                    System.out.println("\n🔄 REDIRECCIONANDO (" + statusCode + ") a: " + redirectUrl);
+                    System.out.println("=".repeat(80) + "\n");
+                    
+                    socket.close();
+                    return downloadUrlWithRedirects(redirectUrl, redirectCount + 1);
+                } else {
+                    System.err.println("❌ Redirección sin header Location");
+                    System.out.println("=".repeat(80) + "\n");
+                    return null;
+                }
+            }
             
+            if (statusCode < 200 || statusCode >= 300) {
+                System.err.println("❌ Estado HTTP no exitoso: " + statusCode);
+                System.out.println("=".repeat(80) + "\n");
+                return null;
+            }
+
+            ByteArrayOutputStream bodyStream = new ByteArrayOutputStream();
             System.out.println("\n📦 CONTENIDO:");
             
-            // Verificar si tiene Content-Length
             String contentLengthStr = headers.get("content-length");
             if (contentLengthStr != null) {
                 try {
@@ -209,12 +462,10 @@ public class RemoteDownloader {
                     }
                     System.out.println("   Bytes leídos: " + totalRead);
                 } catch (NumberFormatException e) {
-                    // Si el Content-Length no es válido, leer hasta el final
                     System.out.println("   Content-Length inválido, leyendo hasta el final...");
                     readUntilEnd(input, bodyStream);
                 }
             } else {
-                // No hay Content-Length, leer hasta que se cierre la conexión
                 System.out.println("   Sin Content-Length, leyendo hasta cierre de conexión...");
                 readUntilEnd(input, bodyStream);
             }
@@ -228,7 +479,6 @@ public class RemoteDownloader {
             System.out.println("   Tamaño final: " + content.data.length + " bytes");
             System.out.println("   Content-Type: " + (content.contentType != null ? content.contentType : "desconocido"));
             
-            // Mostrar preview del contenido si es texto
             if (content.contentType != null && content.contentType.contains("text")) {
                 String preview = new String(content.data, "UTF-8");
                 if (preview.length() > 200) {
@@ -253,41 +503,20 @@ public class RemoteDownloader {
         }
     }
 
-    /**
-     * Lee una línea del InputStream (hasta encontrar \r\n o \n)
-     */
     private String readLine(InputStream input) throws IOException {
         ByteArrayOutputStream lineBuffer = new ByteArrayOutputStream();
-        int b;
-        int prev = -1;
+        int b, prev = -1;
         
         while ((b = input.read()) != -1) {
-            if (b == '\n') {
-                // Encontramos fin de línea
-                break;
-            }
-            if (prev == '\r') {
-                // Si el anterior era \r y este no es \n, agregar el \r
-                if (b != '\n') {
-                    lineBuffer.write(prev);
-                }
-            }
-            if (b != '\r') {
-                lineBuffer.write(b);
-            }
+            if (b == '\n') break;
+            if (prev == '\r' && b != '\n') lineBuffer.write(prev);
+            if (b != '\r') lineBuffer.write(b);
             prev = b;
         }
         
-        if (lineBuffer.size() == 0 && b == -1) {
-            return null;
-        }
-        
-        return new String(lineBuffer.toByteArray(), "UTF-8");
+        return (lineBuffer.size() == 0 && b == -1) ? null : new String(lineBuffer.toByteArray(), "UTF-8");
     }
 
-    /**
-     * Lee datos hasta que el stream se cierre
-     */
     private void readUntilEnd(InputStream input, ByteArrayOutputStream output) throws IOException {
         byte[] buffer = new byte[8192];
         int bytesRead;
@@ -296,68 +525,103 @@ public class RemoteDownloader {
         }
     }
 
-    /**
-     * Guarda datos en un archivo
-     */
     private void saveToFile(byte[] data, File file) throws IOException {
         try (FileOutputStream fos = new FileOutputStream(file)) {
             fos.write(data);
         }
     }
 
-    /**
-     * Extrae un nombre de archivo válido desde una URL
-     */
-    private String getFilenameFromUrl(String url) {
+    private String getRelativePathFromUrl(String url, boolean isDirectoryListing) {
         try {
             URL urlObj = new URL(url);
-            String path = urlObj.getPath();
+            String fullPath = urlObj.getHost() + urlObj.getPath();
             
-            if (path.isEmpty() || path.equals("/")) {
-                return "index.html";
+            if (isDirectoryListing) {
+                fullPath += fullPath.endsWith("/") ? "index.html" : "/index.html";
+            } else if (fullPath.endsWith("/")) {
+                fullPath += "index.html";
             }
             
-            // Obtener el último segmento
-            String[] segments = path.split("/");
-            String filename = segments[segments.length - 1];
+            try {
+                fullPath = URLDecoder.decode(fullPath, "UTF-8");
+            } catch (Exception ignored) {}
             
-            if (filename.isEmpty()) {
-                return "index.html";
-            }
-            
-            // Sanitizar el nombre
-            filename = filename.replaceAll("[^a-zA-Z0-9._-]", "_");
-            
-            // Si no tiene extensión, asumir HTML
-            if (!filename.contains(".")) {
-                filename += ".html";
-            }
-            
-            // Evitar colisiones añadiendo timestamp si ya existe
-            File file = new File(outputDir, filename);
-            if (downloadedFiles.contains(filename)) {
-                String name = filename.substring(0, filename.lastIndexOf('.'));
-                String ext = filename.substring(filename.lastIndexOf('.'));
-                filename = name + "_" + System.currentTimeMillis() + ext;
-            }
-            
-            return filename;
+            return fullPath;
         } catch (Exception e) {
-            return "file_" + System.currentTimeMillis() + ".html";
+            return "unknown_" + System.currentTimeMillis();
         }
     }
+    
+    private String getRelativePathFromUrl(String url) {
+        return getRelativePathFromUrl(url, false);
+    }
 
-    /**
-     * Clase para almacenar contenido descargado
-     */
+    private File createFileWithPath(String url, boolean isDirectoryListing) throws IOException {
+        String relativePath = getRelativePathFromUrl(url, isDirectoryListing);
+        File outputFile = new File(outputDir, relativePath);
+        
+        if (outputFile.getAbsolutePath().length() > 260) {
+            throw new IOException("Ruta demasiado larga. Windows limita a 260 caracteres.");
+        }
+        
+        File parentDir = outputFile.getParentFile();
+        if (parentDir != null) {
+            synchronized (dirLock) {
+                if (!parentDir.exists()) {
+                    File rootDir = new File(outputDir);
+                    if (!rootDir.exists() && !rootDir.mkdirs()) {
+                        throw new IOException("No se pudo crear el directorio raíz: " + outputDir);
+                    }
+                    
+                    String rootPath = rootDir.getAbsolutePath();
+                    String parentPath = parentDir.getAbsolutePath();
+                    
+                    if (parentPath.startsWith(rootPath)) {
+                        String relativePart = parentPath.substring(rootPath.length());
+                        if (relativePart.startsWith(File.separator)) {
+                            relativePart = relativePart.substring(File.separator.length());
+                        }
+                        
+                        String[] parts = relativePart.split("[\\\\/]");
+                        File current = rootDir;
+                        
+                        for (String part : parts) {
+                            if (part.isEmpty()) continue;
+                            
+                            current = new File(current, part);
+                            if (!current.exists() && !current.mkdir() && !current.mkdirs() && !current.exists()) {
+                                throw new IOException("No se pudo crear directorio: " + current.getAbsolutePath());
+                            }
+                        }
+                    } else {
+                        if (!parentDir.mkdirs() && !parentDir.exists()) {
+                            throw new IOException("mkdirs() falló para: " + parentDir.getAbsolutePath());
+                        }
+                    }
+                    
+                    if (!parentDir.exists() || !parentDir.isDirectory()) {
+                        throw new IOException("El directorio no existe o no es válido: " + parentDir.getAbsolutePath());
+                    }
+                }
+            }
+        }
+        
+        if (outputFile.exists() && outputFile.isDirectory()) {
+            throw new IOException("El path ya existe como directorio: " + outputFile.getAbsolutePath());
+        }
+        
+        return outputFile;
+    }
+    
+    private File createFileWithPath(String url) throws IOException {
+        return createFileWithPath(url, false);
+    }
+
     public static class DownloadedContent {
         public byte[] data;
         public String contentType;
     }
 
-    /**
-     * Clase para almacenar resultado de la descarga
-     */
     public static class DownloadResult {
         public long startTime;
         public long endTime;

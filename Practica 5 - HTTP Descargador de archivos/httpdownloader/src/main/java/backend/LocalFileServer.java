@@ -5,60 +5,37 @@ import java.nio.file.*;
 import java.util.*;
 import java.util.zip.*;
 
-/**
- * Maneja la descarga de archivos desde un directorio local.
- * Permite descargar archivos individuales o directorios completos de forma recursiva.
- */
 public class LocalFileServer {
     private final String baseDirectory;
     private final String outputDirectory;
 
-    /**
-     * Constructor
-     * @param baseDirectory Directorio base desde donde servir archivos
-     */
     public LocalFileServer(String baseDirectory) {
         this.baseDirectory = baseDirectory;
         this.outputDirectory = null;
     }
 
-    /**
-     * Constructor con directorio de salida
-     * @param baseDirectory Directorio base desde donde servir archivos
-     * @param outputDirectory Directorio donde copiar los archivos descargados
-     */
     public LocalFileServer(String baseDirectory, String outputDirectory) {
         this.baseDirectory = baseDirectory;
         this.outputDirectory = outputDirectory;
     }
 
-    /**
-     * Obtiene un archivo o directorio local
-     * @param requestedPath Ruta solicitada (relativa al directorio base)
-     * @return Respuesta HTTP con el archivo o listado
-     */
     public HTTPResponse handleRequest(String requestedPath) {
         try {
-            // Sanitizar la ruta para evitar path traversal
             String safePath = sanitizePath(requestedPath);
             File file = new File(baseDirectory, safePath);
 
-            // Verificar que el archivo está dentro del directorio base (seguridad)
             if (!isWithinBaseDirectory(file)) {
                 return HTTPResponse.errorResponse(403, "Acceso denegado");
             }
 
-            // Si no existe
             if (!file.exists()) {
                 return HTTPResponse.errorResponse(404, "Archivo o directorio no encontrado: " + requestedPath);
             }
 
-            // Si es un directorio
             if (file.isDirectory()) {
                 return handleDirectoryRequest(file);
             }
 
-            // Si es un archivo
             return handleFileRequest(file);
 
         } catch (Exception e) {
@@ -66,11 +43,6 @@ public class LocalFileServer {
         }
     }
 
-    /**
-     * Maneja la descarga copiando archivos al directorio de salida
-     * @param requestedPath Ruta solicitada (relativa al directorio base)
-     * @return Resultado de la descarga con estadísticas
-     */
     public DownloadResult handleDownload(String requestedPath) {
         if (outputDirectory == null) {
             return null;
@@ -80,61 +52,49 @@ public class LocalFileServer {
         result.startTime = System.currentTimeMillis();
 
         try {
-            // Sanitizar la ruta para evitar path traversal
             String safePath = sanitizePath(requestedPath);
             File file = new File(baseDirectory, safePath);
 
-            // LOG: Inicio de descarga local
             System.out.println("\n" + "=".repeat(80));
             System.out.println("📂 DESCARGA LOCAL DEL DIRECTORIO DE PUBLICACIÓN");
             System.out.println("=".repeat(80));
-            System.out.println("📍 INFORMACIÓN DE LA PETICIÓN:");
-            System.out.println("   Ruta solicitada: " + requestedPath);
-            System.out.println("   Ruta sanitizada: " + safePath);
+            System.out.println("📍 Ruta solicitada: " + requestedPath);
             System.out.println("   Directorio base: " + baseDirectory);
             System.out.println("   Ruta completa: " + file.getAbsolutePath());
 
-            // Verificar que el archivo está dentro del directorio base (seguridad)
             if (!isWithinBaseDirectory(file)) {
-                System.err.println("❌ ACCESO DENEGADO: Archivo fuera del directorio base");
+                System.err.println("❌ ACCESO DENEGADO");
                 System.out.println("=".repeat(80) + "\n");
                 return null;
             }
 
-            // Si no existe
             if (!file.exists()) {
-                System.err.println("❌ ERROR: Archivo o directorio no encontrado");
+                System.err.println("❌ ERROR: No encontrado");
                 System.out.println("=".repeat(80) + "\n");
                 return null;
             }
 
-            // Mostrar información del archivo/directorio
-            System.out.println("\n📋 INFORMACIÓN DEL RECURSO:");
             System.out.println("   Tipo: " + (file.isDirectory() ? "Directorio" : "Archivo"));
-            System.out.println("   Nombre: " + file.getName());
             if (file.isFile()) {
                 System.out.println("   Tamaño: " + formatFileSize(file.length()));
             }
             System.out.println("   Destino: " + outputDirectory);
-
             System.out.println("\n📦 INICIANDO COPIA...");
 
-            // Copiar archivo(s) al directorio de salida
             if (file.isDirectory()) {
                 copyDirectory(file, new File(outputDirectory, file.getName()), result);
             } else {
                 copyFile(file, new File(outputDirectory, file.getName()), result);
             }
 
-            System.out.println("\n✅ DESCARGA LOCAL COMPLETADA:");
-            System.out.println("   Archivos copiados: " + result.filesDownloaded);
-            System.out.println("   Total de bytes: " + formatFileSize(result.bytesDownloaded));
+            System.out.println("\n✅ DESCARGA COMPLETADA:");
+            System.out.println("   Archivos: " + result.filesDownloaded);
+            System.out.println("   Bytes: " + formatFileSize(result.bytesDownloaded));
             System.out.println("   Tiempo: " + result.getDurationMs() + " ms");
             System.out.println("=".repeat(80) + "\n");
 
         } catch (Exception e) {
-            System.err.println("❌ Error en descarga local: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("❌ Error: " + e.getMessage());
             System.out.println("=".repeat(80) + "\n");
         }
 
@@ -142,14 +102,9 @@ public class LocalFileServer {
         return result;
     }
 
-    /**
-     * Maneja la petición de un archivo individual
-     */
     private HTTPResponse handleFileRequest(File file) throws IOException {
-        // Leer el archivo
         byte[] fileContent = Files.readAllBytes(file.toPath());
 
-        // Crear respuesta
         HTTPResponse response = new HTTPResponse(200, "OK");
         response.setBody(fileContent);
         response.addHeader("Content-Type", HTTPResponse.getMimeType(file.getName()));
@@ -158,22 +113,15 @@ public class LocalFileServer {
         return response;
     }
 
-    /**
-     * Maneja la petición de un directorio
-     * Crea un archivo ZIP con todo el contenido de forma recursiva
-     */
     private HTTPResponse handleDirectoryRequest(File directory) throws IOException {
-        // Crear un ZIP temporal con el contenido del directorio
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         ZipOutputStream zipOut = new ZipOutputStream(baos);
 
-        // Añadir archivos recursivamente al ZIP
         addDirectoryToZip(directory, directory.getName(), zipOut);
 
         zipOut.close();
         byte[] zipData = baos.toByteArray();
 
-        // Crear respuesta
         HTTPResponse response = new HTTPResponse(200, "OK");
         response.setBody(zipData);
         response.addHeader("Content-Type", "application/zip");
@@ -182,9 +130,6 @@ public class LocalFileServer {
         return response;
     }
 
-    /**
-     * Añade un directorio y su contenido a un archivo ZIP de forma recursiva
-     */
     private void addDirectoryToZip(File directory, String basePath, ZipOutputStream zipOut) throws IOException {
         File[] files = directory.listFiles();
         if (files == null) {
@@ -195,14 +140,10 @@ public class LocalFileServer {
             String entryName = basePath + "/" + file.getName();
 
             if (file.isDirectory()) {
-                // Añadir directorio (entrada con /)
                 zipOut.putNextEntry(new ZipEntry(entryName + "/"));
                 zipOut.closeEntry();
-
-                // Recursión para subdirectorios
                 addDirectoryToZip(file, entryName, zipOut);
             } else {
-                // Añadir archivo
                 zipOut.putNextEntry(new ZipEntry(entryName));
                 Files.copy(file.toPath(), zipOut);
                 zipOut.closeEntry();
@@ -210,10 +151,6 @@ public class LocalFileServer {
         }
     }
 
-    /**
-     * Genera un listado HTML de un directorio
-     * (alternativa a descargar todo como ZIP)
-     */
     public HTTPResponse getDirectoryListing(String requestedPath) {
         try {
             String safePath = sanitizePath(requestedPath);
@@ -296,26 +233,17 @@ public class LocalFileServer {
         }
     }
 
-    /**
-     * Sanitiza una ruta para evitar path traversal attacks
-     */
     private String sanitizePath(String path) {
         if (path == null || path.isEmpty() || path.equals("/")) {
             return "";
         }
 
-        // Eliminar barras iniciales y finales
         path = path.replaceAll("^/+", "").replaceAll("/+$", "");
-
-        // Eliminar .. y .
         path = path.replaceAll("\\.\\.", "").replaceAll("\\./", "");
 
         return path;
     }
 
-    /**
-     * Verifica que un archivo está dentro del directorio base (seguridad)
-     */
     private boolean isWithinBaseDirectory(File file) {
         try {
             Path basePath = new File(baseDirectory).getCanonicalFile().toPath();
@@ -326,9 +254,6 @@ public class LocalFileServer {
         }
     }
 
-    /**
-     * Formatea el tamaño de un archivo de forma legible
-     */
     private String formatFileSize(long bytes) {
         if (bytes < 1024) return bytes + " B";
         if (bytes < 1024 * 1024) return String.format("%.1f KB", bytes / 1024.0);
@@ -336,9 +261,6 @@ public class LocalFileServer {
         return String.format("%.1f GB", bytes / (1024.0 * 1024 * 1024));
     }
 
-    /**
-     * Copia un archivo individual
-     */
     private void copyFile(File source, File destination, DownloadResult result) throws IOException {
         Files.copy(source.toPath(), destination.toPath(), StandardCopyOption.REPLACE_EXISTING);
         result.filesDownloaded++;
@@ -346,9 +268,6 @@ public class LocalFileServer {
         System.out.println("   ✅ " + source.getName() + " → " + formatFileSize(source.length()));
     }
 
-    /**
-     * Copia un directorio de forma recursiva
-     */
     private void copyDirectory(File source, File destination, DownloadResult result) throws IOException {
         if (!destination.exists()) {
             destination.mkdirs();
@@ -371,9 +290,6 @@ public class LocalFileServer {
         }
     }
 
-    /**
-     * Clase para almacenar resultado de la descarga local
-     */
     public static class DownloadResult {
         public long startTime;
         public long endTime;
